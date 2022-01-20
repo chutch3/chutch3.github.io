@@ -6,8 +6,8 @@ url: "http://codyhutchens.com" # the base hostname & protocol for your site e.g.
 
 # User settings
 username: Cody Hutchens
-user_description: A software engineer making his way through data science with an evolving passion for machine learning. My focus within the artifical intelligence space is shifting to reinforcement learning. I have worked on everything from building frontends to building backend apis to working on deep learning neural networks.
-user_title: Lead Machine Learning Engineer
+user_description: A software engineer making his way through data science with an evolving passion for machine learning. My focus within the artifical intelligence space is shifting to reinforcement learning and deep learning. I have worked on everything from building frontends to backend apis to working on deep learning neural networks.
+user_title: Machine Learning Engineer
 email: chutchens91@gmail.com
 twitter_username: lorem_ipsum
 github_username:  chutch3
