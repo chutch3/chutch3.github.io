@@ -36,10 +36,9 @@ const CONFIG = {
           title: 'Hubitat Device Refresher',
           description:
             'A Hubitat app that automatically refreshes the status of selected Z-Wave devices on a user-defined schedule. Ideal for users who want to keep device states up-to-date and avoid stale readings. Supports both simple interval selection and advanced cron expressions.',
-          imageUrl:
-            '',
+          imageUrl: '',
           link: 'https://gist.github.com/chutch3/2662014539066e1219280678ec9d5169',
-        }
+        },
       ],
     },
   },
