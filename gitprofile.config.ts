@@ -32,22 +32,14 @@ const CONFIG = {
       header: 'My Projects',
       // To hide the `External Projects` section, keep it empty.
       projects: [
-        // {
-        //   title: 'Project Name',
-        //   description:
-        //     'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut.',
-        //   imageUrl:
-        //     'https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg',
-        //   link: 'https://example.com',
-        // },
-        // {
-        //   title: 'Project Name',
-        //   description:
-        //     'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nunc ut.',
-        //   imageUrl:
-        //     'https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg',
-        //   link: 'https://example.com',
-        // },
+        {
+          title: 'Hubitat Device Refresher',
+          description:
+            'A Hubitat app that automatically refreshes the status of selected Z-Wave devices on a user-defined schedule. Ideal for users who want to keep device states up-to-date and avoid stale readings. Supports both simple interval selection and advanced cron expressions.',
+          imageUrl:
+            '',
+          link: 'https://gist.github.com/chutch3/2662014539066e1219280678ec9d5169',
+        }
       ],
     },
   },
