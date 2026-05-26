@@ -124,7 +124,4 @@ export const siteConfig = {
       to: '2013',
     },
   ] satisfies Education[],
-  googleAnalytics: {
-    id: 'G-SPXQNC1QDT',
-  },
 };
