@@ -80,6 +80,12 @@ export const animeList: AnimeEntry[] = [
     status: 'watching',
     url: 'https://myanimelist.net/anime/6793/Deadman_Wonderland',
   },
+  {
+    title: 'Ergo Proxy',
+    titleJp: 'エルゴプラクシー',
+    status: 'watching',
+    url: 'https://myanimelist.net/anime/790/Ergo_Proxy',
+  },
 
   // Completed
   {
@@ -88,6 +94,41 @@ export const animeList: AnimeEntry[] = [
     rating: 10,
     status: 'completed',
     url: 'https://myanimelist.net/anime/57334/Dandadan',
+  },
+  {
+    title: 'Attack on Titan',
+    titleJp: '進撃の巨人',
+    rating: 10,
+    status: 'completed',
+    url: 'https://myanimelist.net/anime/16498/Shingeki_no_Kyojin',
+  },
+  {
+    title: 'Seven Deadly Sins',
+    titleJp: '七つの大罪',
+    rating: 7,
+    status: 'completed',
+    url: 'https://myanimelist.net/anime/23755/Nanatsu_no_Taizai',
+  },
+  {
+    title: 'Neon Genesis Evangelion',
+    titleJp: '新世紀エヴァンゲリオン',
+    rating: 10,
+    status: 'completed',
+    url: 'https://myanimelist.net/anime/30/Neon_Genesis_Evangelion',
+  },
+  {
+    title: 'Mashle: Magic and Muscles',
+    titleJp: 'マッシュル',
+    rating: 10,
+    status: 'completed',
+    url: 'https://myanimelist.net/anime/52211/Mashle',
+  },
+  {
+    title: 'Cleverness',
+    titleJp: 'クレバネス',
+    rating: 10,
+    status: 'completed',
+    url: 'https://myanimelist.net/anime/59491/Cleverness',
   },
   {
     title: 'My Hero Academia',
