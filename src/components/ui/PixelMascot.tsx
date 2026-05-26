@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 
-// Color indices
-const _ = 0; // transparent
+const x = 0;
 const H = 1; // hair (cyan)
-const K = 2; // outline/dark
+const K = 2; // outline
 const S = 3; // skin
-const C = 4; // clothes body
+const C = 4; // clothes
 const B = 5; // clothes dark
 const A = 6; // accent (pink)
-const W = 7; // white/shoes
+const W = 7; // shoes
 
 const PALETTE: Record<number, string> = {
-  [_]: '',
+  [x]: '',
   [H]: '#00f5ff',
   [K]: '#0a0a0f',
   [S]: '#e8d0c0',
@@ -22,186 +22,228 @@ const PALETTE: Record<number, string> = {
 };
 
 const SCALE = 4;
-const SW = 16; // sprite width
-const SH = 22; // sprite height
+const SPW = 16;
+const SPH = 22;
 
-// Pokemon-style walk cycle: stand, step-right, stand, step-left
-// Character has head, torso, arms, legs clearly defined
-
+/* prettier-ignore */
 const STAND = [
-  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
-  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
-  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
-  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, K, C, C, C, C, C, K, _, _, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, S, _, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, S, _, _, _, _],
-  [_, _, _, S, _, K, C, C, C, K, _, S, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, B, C, _, C, B, _, _, _, _, _, _],
-  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
-  [_, _, _, _, K, K, K, _, K, K, K, _, _, _, _, _],
+  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
+  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
+  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
+  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,K,C,C,C,C,C,K,x,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,S,x,K,C,C,C,K,x,S,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
+  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
 ];
 
-// Right foot forward, left arm forward
+/* prettier-ignore */
 const WALK_R = [
-  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
-  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
-  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
-  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, _, _, _, _, _],
-  [_, _, S, _, K, C, C, C, C, C, K, S, _, _, _, _],
-  [_, _, _, _, K, C, C, C, C, C, K, _, S, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, K, C, _, _, _, C, K, _, _, _, _, _],
-  [_, _, _, _, B, C, _, _, _, C, B, _, _, _, _, _],
-  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
-  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
-  [_, _, K, K, K, _, _, _, _, K, K, K, _, _, _, _],
-  [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
+  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
+  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
+  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
+  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,x,x,x,x,x],
+  [x,x,S,x,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,x,K,C,C,C,C,C,K,x,S,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,K,C,x,x,x,C,K,x,x,x,x,x],
+  [x,x,x,x,B,C,x,x,x,C,B,x,x,x,x,x],
+  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
+  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
+  [x,x,K,K,K,x,x,x,x,K,K,K,x,x,x,x],
+  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
 ];
 
-// Left foot forward, right arm forward
+/* prettier-ignore */
 const WALK_L = [
-  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
-  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
-  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
-  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, K, C, C, C, C, C, K, S, _, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, _, S, _, _, _],
-  [_, _, S, _, K, C, C, C, C, C, K, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, K, C, _, _, _, C, K, _, _, _, _, _],
-  [_, _, _, _, B, C, _, _, _, C, B, _, _, _, _, _],
-  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
-  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
-  [_, _, K, K, K, _, _, _, _, K, K, K, _, _, _, _],
-  [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
+  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
+  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
+  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
+  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,x,S,x,x,x],
+  [x,x,S,x,K,C,C,C,C,C,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,K,C,x,x,x,C,K,x,x,x,x,x],
+  [x,x,x,x,B,C,x,x,x,C,B,x,x,x,x,x],
+  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
+  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
+  [x,x,K,K,K,x,x,x,x,K,K,K,x,x,x,x],
+  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
 ];
 
-// Wave - right arm up
+/* prettier-ignore */
 const WAVE_1 = [
-  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
-  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
-  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
-  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, K, C, C, C, C, C, K, _, S, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, _, S, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, S, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, B, C, _, C, B, _, _, _, _, _, _],
-  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
-  [_, _, _, _, K, K, K, _, K, K, K, _, _, _, _, _],
+  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
+  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
+  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
+  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,K,C,C,C,C,C,K,x,S,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,x,S,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
+  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
 ];
 
+/* prettier-ignore */
 const WAVE_2 = [
-  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
-  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
-  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
-  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
-  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
-  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, S, _, _, _],
-  [_, _, _, _, K, C, C, C, C, C, K, S, _, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, _, _, _, _, _],
-  [_, _, _, S, K, C, C, C, C, C, K, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
-  [_, _, _, _, _, B, C, _, C, B, _, _, _, _, _, _],
-  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
-  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
-  [_, _, _, _, K, K, K, _, K, K, K, _, _, _, _, _],
+  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
+  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
+  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
+  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,S,x,x,x],
+  [x,x,x,x,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,x,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
+  [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
+  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
+];
+
+/* prettier-ignore */
+const SIT = [
+  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
+  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
+  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
+  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
+  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
+  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,K,C,C,C,C,C,K,x,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
+  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
+  [x,x,x,x,K,C,C,C,C,C,K,x,x,x,x,x],
+  [x,x,x,x,B,W,W,x,W,W,B,x,x,x,x,x],
+  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
+  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
 ];
 
 const WALK_FRAMES = [STAND, WALK_R, STAND, WALK_L];
 const WAVE_FRAMES = [WAVE_1, WAVE_2];
 
 type Behavior =
-  | 'idle'
+  | 'offscreen'
+  | 'entering'
   | 'walking'
+  | 'idle'
   | 'waving'
   | 'powerup'
+  | 'narutorun'
+  | 'sleeping'
+  | 'sitting'
   | 'fleeing'
   | 'jumping'
-  | 'offscreen';
-
-const SPEECH = [
-  'こんにちは!',
-  '...zzZ',
-  'NANI?!',
-  '>_<',
-  '♪♪♪',
-  'sugoi~',
-  '( ◕‿◕ )',
-  'omae wa...',
-  '✧*。',
-  'yare yare',
-  'senpai!',
-  '~nyaa',
-  'kawaii',
-  'gg',
-  'brb',
-];
+  | 'exiting';
 
 interface Platform {
-  y: number; // distance from bottom of viewport
-  xMin: number; // left edge (fraction of viewport width)
-  xMax: number; // right edge (fraction of viewport width)
+  y: number;
+  xMin: number;
+  xMax: number;
 }
 
-function getPlatforms(): Platform[] {
-  return [
-    { y: 20, xMin: 0, xMax: 1 }, // ground level
-    { y: 180, xMin: 0.05, xMax: 0.4 }, // lower left
-    { y: 180, xMin: 0.6, xMax: 0.95 }, // lower right
-    { y: 320, xMin: 0.2, xMax: 0.7 }, // mid center
-    { y: 440, xMin: 0, xMax: 0.35 }, // upper left
-    { y: 440, xMin: 0.65, xMax: 1 }, // upper right
-  ];
-}
+const ROUTE_PLATFORMS: Record<string, Platform[]> = {
+  '/': [
+    { y: 20, xMin: 0, xMax: 1 },
+    { y: 200, xMin: 0.1, xMax: 0.5 },
+    { y: 350, xMin: 0.4, xMax: 0.9 },
+  ],
+  '/about': [
+    { y: 20, xMin: 0, xMax: 1 },
+    { y: 250, xMin: 0.15, xMax: 0.75 },
+  ],
+  '/resume': [
+    { y: 20, xMin: 0, xMax: 1 },
+    { y: 300, xMin: 0.05, xMax: 0.45 },
+    { y: 300, xMin: 0.55, xMax: 0.95 },
+    { y: 500, xMin: 0.2, xMax: 0.8 },
+  ],
+  '/projects': [
+    { y: 20, xMin: 0, xMax: 1 },
+    { y: 280, xMin: 0.05, xMax: 0.5 },
+    { y: 280, xMin: 0.5, xMax: 0.95 },
+  ],
+  '/anime': [
+    { y: 20, xMin: 0, xMax: 1 },
+    { y: 250, xMin: 0.05, xMax: 0.35 },
+    { y: 250, xMin: 0.35, xMax: 0.65 },
+    { y: 250, xMin: 0.65, xMax: 0.95 },
+  ],
+  '/blog': [
+    { y: 20, xMin: 0, xMax: 1 },
+    { y: 300, xMin: 0.2, xMax: 0.8 },
+  ],
+  '/privacy': [
+    { y: 20, xMin: 0, xMax: 1 },
+    { y: 280, xMin: 0.15, xMax: 0.75 },
+  ],
+};
+
+const IDLE_SPEECH = ['...zzZ', '♪♪♪', '✧*。', 'yare yare', '( ◕‿◕ )'];
+
+const NARUTO_SPEECH = ['ikuzo!!', 'dattebayo!'];
 
 function mirrorFrame(frame: number[][]): number[][] {
   return frame.map((row) => [...row].reverse());
@@ -209,21 +251,27 @@ function mirrorFrame(frame: number[][]): number[][] {
 
 export default function PixelMascot() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const location = useLocation();
   const [speech, setSpeech] = useState('');
   const [speechPos, setSpeechPos] = useState({ x: 0, y: 0 });
   const [showPowerFx, setShowPowerFx] = useState(false);
   const [powerPos, setPowerPos] = useState({ x: 0, y: 0 });
+  const routeRef = useRef(location.pathname);
+
+  useEffect(() => {
+    routeRef.current = location.pathname;
+  }, [location.pathname]);
 
   const drawSprite = useCallback(
     (ctx: CanvasRenderingContext2D, frame: number[][], flip: boolean) => {
       const data = flip ? mirrorFrame(frame) : frame;
-      ctx.clearRect(0, 0, SW * SCALE, SH * SCALE);
-      for (let y = 0; y < SH; y++) {
-        for (let x = 0; x < SW; x++) {
-          const pixel = data[y][x];
-          if (pixel === _) continue;
+      ctx.clearRect(0, 0, SPW * SCALE, SPH * SCALE);
+      for (let row = 0; row < SPH; row++) {
+        for (let col = 0; col < SPW; col++) {
+          const pixel = data[row][col];
+          if (pixel === x) continue;
           ctx.fillStyle = PALETTE[pixel];
-          ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+          ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
         }
       }
     },
@@ -236,39 +284,127 @@ export default function PixelMascot() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const platforms = getPlatforms();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const sprW = SW * SCALE;
-    const sprH = SH * SCALE;
+    const sprW = SPW * SCALE;
+    const sprH = SPH * SCALE;
 
     const s = {
-      x: 100 + Math.random() * 200,
-      y: vh - 20 - sprH,
-      platform: 0,
-      behavior: 'walking' as Behavior,
+      posX: -sprW - 50,
+      posY: 0,
+      behavior: 'offscreen' as Behavior,
       direction: 1,
-      frame: 0,
       tick: 0,
-      timer: 80 + Math.random() * 60,
+      timer: 100 + Math.random() * 150,
+      platform: 0,
       speed: 1.2,
-      // jump state
       jumpVy: 0,
       jumpTarget: -1,
-      grounded: true,
-      // mouse
-      mouseX: -1000,
-      mouseY: -1000,
-      // speech
+      mouseX: -9999,
+      mouseY: -9999,
       speechTimer: 0,
+      sleepBubbleGrow: 0,
+      visible: false,
+      behaviorsThisVisit: 0,
     };
 
-    function platLeft(p: Platform) {
-      return p.xMin * vw;
+    function getPlatformsForRoute(): Platform[] {
+      return ROUTE_PLATFORMS[routeRef.current] || ROUTE_PLATFORMS['/'];
     }
 
+    function platLeft(p: Platform) {
+      return p.xMin * window.innerWidth;
+    }
     function platRight(p: Platform) {
-      return p.xMax * vw - sprW;
+      return p.xMax * window.innerWidth - sprW;
+    }
+    function platYPos(p: Platform) {
+      return window.innerHeight - p.y - sprH;
+    }
+
+    function showSpeech(msg: string, dur = 60) {
+      setSpeech(msg);
+      s.speechTimer = dur;
+    }
+
+    function pickEntrance() {
+      const plats = getPlatformsForRoute();
+      s.platform = Math.floor(Math.random() * plats.length);
+      const p = plats[s.platform];
+      s.direction = Math.random() < 0.5 ? 1 : -1;
+      s.posX = s.direction === 1 ? -sprW : window.innerWidth + sprW;
+      s.posY = platYPos(p);
+      s.behavior = 'entering';
+      s.speed = 1.2;
+      s.timer = 999;
+      s.visible = true;
+      s.behaviorsThisVisit = 0;
+    }
+
+    function pickBehavior() {
+      s.behaviorsThisVisit++;
+      const roll = Math.random();
+      s.speed = 1.2;
+      const canExit = s.behaviorsThisVisit >= 3;
+
+      if (roll < 0.2) {
+        s.behavior = 'walking';
+        s.direction = Math.random() < 0.5 ? -1 : 1;
+        s.timer = 50 + Math.random() * 80;
+      } else if (roll < 0.3) {
+        s.behavior = 'idle';
+        s.timer = 40 + Math.random() * 60;
+        if (Math.random() < 0.5) {
+          showSpeech(
+            IDLE_SPEECH[Math.floor(Math.random() * IDLE_SPEECH.length)],
+          );
+        }
+      } else if (roll < 0.4) {
+        s.behavior = 'waving';
+        s.timer = 45;
+        showSpeech('hey! ✧');
+      } else if (roll < 0.48) {
+        s.behavior = 'powerup';
+        s.timer = 65;
+        showSpeech('HAAA!!', 55);
+        setShowPowerFx(true);
+        setPowerPos({ x: s.posX, y: s.posY });
+      } else if (roll < 0.58) {
+        s.behavior = 'narutorun';
+        s.direction = Math.random() < 0.5 ? -1 : 1;
+        s.timer = 40 + Math.random() * 35;
+        s.speed = 2.5;
+        showSpeech(
+          NARUTO_SPEECH[Math.floor(Math.random() * NARUTO_SPEECH.length)],
+          30,
+        );
+      } else if (roll < 0.66) {
+        s.behavior = 'sleeping';
+        s.timer = 70 + Math.random() * 50;
+        s.sleepBubbleGrow = 0;
+      } else if (roll < 0.74) {
+        s.behavior = 'sitting';
+        s.timer = 60 + Math.random() * 40;
+        if (Math.random() < 0.5) showSpeech('( ˘ω˘ )', 40);
+      } else if (roll < 0.88) {
+        const plats = getPlatformsForRoute();
+        if (plats.length > 1) {
+          const others = plats.map((_, i) => i).filter((i) => i !== s.platform);
+          s.jumpTarget = others[Math.floor(Math.random() * others.length)];
+          s.behavior = 'jumping';
+          s.jumpVy = -8;
+          s.timer = 999;
+        } else {
+          s.behavior = 'walking';
+          s.timer = 50;
+        }
+      } else if (canExit) {
+        s.behavior = 'exiting';
+        s.direction = Math.random() < 0.5 ? -1 : 1;
+        s.speed = 1.5;
+        s.timer = 999;
+      } else {
+        s.behavior = 'walking';
+        s.timer = 50 + Math.random() * 60;
+      }
     }
 
     const onMouse = (e: MouseEvent) => {
@@ -277,174 +413,147 @@ export default function PixelMascot() {
     };
     window.addEventListener('mousemove', onMouse);
 
-    const onResize = () => {
-      const newVw = window.innerWidth;
-      const newVh = window.innerHeight;
-      const plat = platforms[s.platform];
-      s.y = newVh - plat.y - sprH;
-      if (s.x > plat.xMax * newVw - sprW) s.x = plat.xMax * newVw - sprW;
-      if (s.x < plat.xMin * newVw) s.x = plat.xMin * newVw;
-    };
-    window.addEventListener('resize', onResize);
-
     const loop = setInterval(() => {
       s.tick++;
-      const curPlat = platforms[s.platform];
-      const cw = window.innerWidth;
-      const ch = window.innerHeight;
 
-      // Cursor flee
-      const cx = s.x + sprW / 2;
-      const cy = s.y + sprH / 2;
-      const dx = s.mouseX - cx;
-      const dy = s.mouseY - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (
-        dist < 130 &&
-        s.behavior !== 'powerup' &&
-        s.behavior !== 'jumping' &&
-        s.behavior !== 'offscreen'
-      ) {
-        s.behavior = 'fleeing';
-        s.direction = dx > 0 ? -1 : 1;
-        s.timer = 25;
-        s.speed = 2.5;
+      // Offscreen: wait, then enter
+      if (s.behavior === 'offscreen') {
+        s.timer--;
+        canvas.style.opacity = '0';
+        if (s.timer <= 0) pickEntrance();
+        return;
       }
 
-      // Behavior timer
-      if (s.behavior !== 'jumping' && s.behavior !== 'offscreen') {
-        s.timer--;
-        if (s.timer <= 0) {
-          const roll = Math.random();
-          s.speed = 1.2;
-          if (roll < 0.3) {
-            s.behavior = 'idle';
-            s.timer = 80 + Math.random() * 120;
-            if (Math.random() < 0.3) {
-              const msg = SPEECH[Math.floor(Math.random() * SPEECH.length)];
-              setSpeech(msg);
-              s.speechTimer = 70;
-            }
-          } else if (roll < 0.65) {
-            s.behavior = 'walking';
-            s.direction = Math.random() < 0.5 ? -1 : 1;
-            s.timer = 80 + Math.random() * 150;
-          } else if (roll < 0.75) {
-            s.behavior = 'waving';
-            s.timer = 50;
-            setSpeech('hey! ✧');
-            s.speechTimer = 45;
-          } else if (roll < 0.82) {
-            s.behavior = 'powerup';
-            s.timer = 70;
-            setSpeech('HAAA!!');
-            s.speechTimer = 60;
-            setShowPowerFx(true);
-            setPowerPos({ x: s.x, y: s.y });
-          } else if (roll < 0.92) {
-            // Jump to another platform
-            const others = platforms
-              .map((_, i) => i)
-              .filter((i) => i !== s.platform);
-            const target = others[Math.floor(Math.random() * others.length)];
-            s.behavior = 'jumping';
-            s.jumpTarget = target;
-            s.jumpVy = -8;
-            s.grounded = false;
-          } else {
-            // Walk offscreen
-            s.behavior = 'offscreen';
-            s.direction = Math.random() < 0.5 ? -1 : 1;
-            s.timer = 999;
-            s.speed = 1.5;
-          }
+      canvas.style.opacity = '1';
+      const plats = getPlatformsForRoute();
+      const curPlat = plats[s.platform] || plats[0];
+
+      // Cursor flee
+      if (
+        s.behavior !== 'jumping' &&
+        s.behavior !== 'exiting' &&
+        s.behavior !== 'entering'
+      ) {
+        const cx = s.posX + sprW / 2;
+        const cy = s.posY + sprH / 2;
+        const dx = s.mouseX - cx;
+        const dy = s.mouseY - cy;
+        if (Math.sqrt(dx * dx + dy * dy) < 120) {
+          s.behavior = 'fleeing';
+          s.direction = dx > 0 ? -1 : 1;
+          s.timer = 25;
+          s.speed = 2.5;
         }
       }
 
-      // Movement
+      // Entering
+      if (s.behavior === 'entering') {
+        s.posX += s.direction * s.speed;
+        const left = platLeft(curPlat);
+        const right = platRight(curPlat);
+        const targetX = left + (right - left) * (0.2 + Math.random() * 0.6);
+        if (
+          (s.direction === 1 && s.posX >= targetX) ||
+          (s.direction === -1 && s.posX <= targetX)
+        ) {
+          s.behavior = 'idle';
+          s.timer = 30 + Math.random() * 40;
+        }
+      }
+
+      // Exiting
+      if (s.behavior === 'exiting') {
+        s.posX += s.direction * s.speed;
+        if (s.posX < -sprW - 20 || s.posX > window.innerWidth + 20) {
+          s.behavior = 'offscreen';
+          s.timer = 150 + Math.random() * 250;
+          s.visible = false;
+        }
+      }
+
+      // Walking / fleeing / naruto
       if (
         s.behavior === 'walking' ||
         s.behavior === 'fleeing' ||
-        s.behavior === 'offscreen'
+        s.behavior === 'narutorun'
       ) {
-        s.x += s.direction * s.speed;
-      }
-
-      // Platform bounds for walking/fleeing
-      if (s.behavior === 'walking' || s.behavior === 'fleeing') {
+        s.posX += s.direction * s.speed;
         const left = platLeft(curPlat);
         const right = platRight(curPlat);
-        if (s.x <= left) {
-          s.x = left;
+        if (s.posX <= left) {
+          s.posX = left;
           s.direction = 1;
         }
-        if (s.x >= right) {
-          s.x = right;
+        if (s.posX >= right) {
+          s.posX = right;
           s.direction = -1;
-        }
-      }
-
-      // Offscreen logic
-      if (s.behavior === 'offscreen') {
-        if (s.x < -sprW - 20 || s.x > cw + 20) {
-          // Reappear on a random platform from the opposite side
-          const newPlat = Math.floor(Math.random() * platforms.length);
-          s.platform = newPlat;
-          const p = platforms[newPlat];
-          s.y = ch - p.y - sprH;
-          s.direction = s.x < 0 ? 1 : -1;
-          s.x = s.direction === 1 ? p.xMin * cw - sprW : p.xMax * cw;
-          s.behavior = 'walking';
-          s.timer = 60 + Math.random() * 100;
-          s.speed = 1.2;
         }
       }
 
       // Jump physics
       if (s.behavior === 'jumping') {
-        const targetPlat = platforms[s.jumpTarget];
-        const targetY = ch - targetPlat.y - sprH;
+        const targetPlat = plats[s.jumpTarget] || plats[0];
+        const targetY = platYPos(targetPlat);
         const targetX =
           platLeft(targetPlat) +
-          (platRight(targetPlat) - platLeft(targetPlat)) *
-            (0.3 + Math.random() * 0.4);
-
+          (platRight(targetPlat) - platLeft(targetPlat)) * 0.5;
         s.jumpVy += 0.35;
-        s.y += s.jumpVy;
-        // Move horizontally toward target
-        const dxj = targetX - s.x;
-        s.x += dxj * 0.04;
-        s.direction = dxj > 0 ? 1 : -1;
-
-        if (s.jumpVy > 0 && s.y >= targetY) {
-          s.y = targetY;
+        s.posY += s.jumpVy;
+        s.posX += (targetX - s.posX) * 0.04;
+        s.direction = targetX > s.posX ? 1 : -1;
+        if (s.jumpVy > 0 && s.posY >= targetY) {
+          s.posY = targetY;
           s.platform = s.jumpTarget;
-          s.grounded = true;
           s.behavior = 'idle';
-          s.timer = 30 + Math.random() * 40;
+          s.timer = 20 + Math.random() * 30;
           s.jumpVy = 0;
         }
       }
 
-      // Speech timer
+      // Sleeping bubble
+      if (s.behavior === 'sleeping') {
+        s.sleepBubbleGrow = Math.min(s.sleepBubbleGrow + 0.02, 1);
+        if (s.tick % 40 === 0) {
+          const dots = '.'.repeat(1 + Math.floor(s.sleepBubbleGrow * 3));
+          setSpeech(`zzZ${dots}`);
+          s.speechTimer = 38;
+        }
+      }
+
+      // Timer
+      if (
+        s.behavior !== 'offscreen' &&
+        s.behavior !== 'entering' &&
+        s.behavior !== 'exiting' &&
+        s.behavior !== 'jumping'
+      ) {
+        s.timer--;
+        if (s.timer <= 0) pickBehavior();
+      }
+
+      // Speech
       if (s.speechTimer > 0) {
         s.speechTimer--;
-        setSpeechPos({ x: s.x + sprW / 2, y: s.y - 8 });
+        setSpeechPos({ x: s.posX + sprW / 2, y: s.posY - 8 });
         if (s.speechTimer <= 0) {
           setSpeech('');
           setShowPowerFx(false);
         }
       }
 
-      // Select animation frame
+      // Sprite selection
       let sprite: number[][];
       const flip = s.direction === -1;
 
       switch (s.behavior) {
         case 'walking':
-        case 'fleeing':
-        case 'offscreen':
+        case 'entering':
+        case 'exiting':
           sprite = WALK_FRAMES[Math.floor(s.tick / 6) % 4];
+          break;
+        case 'fleeing':
+        case 'narutorun':
+          sprite = WALK_FRAMES[Math.floor(s.tick / 4) % 4];
           break;
         case 'waving':
           sprite = WAVE_FRAMES[Math.floor(s.tick / 8) % 2];
@@ -455,18 +564,21 @@ export default function PixelMascot() {
         case 'powerup':
           sprite = s.tick % 4 < 2 ? STAND : WALK_R;
           break;
+        case 'sleeping':
+        case 'sitting':
+          sprite = SIT;
+          break;
         default:
           sprite = STAND;
       }
 
-      canvas.style.transform = `translate(${Math.round(s.x)}px, ${Math.round(s.y)}px)`;
+      canvas.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY)}px)`;
       drawSprite(ctx, sprite, flip);
     }, 1000 / 20);
 
     return () => {
       clearInterval(loop);
       window.removeEventListener('mousemove', onMouse);
-      window.removeEventListener('resize', onResize);
     };
   }, [drawSprite]);
 
@@ -474,9 +586,9 @@ export default function PixelMascot() {
     <>
       <canvas
         ref={canvasRef}
-        width={SW * SCALE}
-        height={SH * SCALE}
-        className="fixed top-0 left-0 z-40 pointer-events-none"
+        width={SPW * SCALE}
+        height={SPH * SCALE}
+        className="fixed top-0 left-0 z-40 pointer-events-none opacity-0 transition-opacity duration-500"
         style={{ imageRendering: 'pixelated' }}
       />
       {speech && (
@@ -500,8 +612,8 @@ export default function PixelMascot() {
           style={{
             left: powerPos.x - 15,
             top: powerPos.y - 15,
-            width: SW * SCALE + 30,
-            height: SH * SCALE + 30,
+            width: SPW * SCALE + 30,
+            height: SPH * SCALE + 30,
           }}
         >
           <div className="w-full h-full rounded-full bg-cyber-yellow/10 animate-ping" />
