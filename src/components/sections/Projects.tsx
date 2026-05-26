@@ -4,8 +4,9 @@ import { FaGithub } from 'react-icons/fa';
 import SectionHeading from '@/components/ui/SectionHeading';
 import NeonCard from '@/components/ui/NeonCard';
 import SkillBadge from '@/components/ui/SkillBadge';
-import { projects } from '@/config/projects.config';
+import { siteConfig } from '@/config/site.config';
 import { trackEvent } from '@/lib/analytics';
+import type { Project } from '@/types';
 
 const container = {
   hidden: {},
@@ -20,10 +21,15 @@ const item = {
 };
 
 export default function Projects() {
+  const projects = siteConfig.projects as Project[];
+
   return (
     <section className="py-24 px-6 glow-pink noise-bg">
       <div className="max-w-4xl mx-auto">
-        <SectionHeading title="Projects" jpTitle="プロジェクト" />
+        <SectionHeading
+          title={siteConfig.sections.projects.title}
+          jpTitle={siteConfig.sections.projects.jp}
+        />
 
         <motion.div
           variants={container}

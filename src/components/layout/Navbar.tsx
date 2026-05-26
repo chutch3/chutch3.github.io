@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiMenuAlt4, HiX } from 'react-icons/hi';
+import { siteConfig } from '@/config/site.config';
 
 const navLinks = [
   { path: '/', label: 'Home' },
@@ -23,7 +24,7 @@ export default function Navbar() {
           to="/"
           className="font-heading text-sm font-bold tracking-widest text-cyber-cyan uppercase hover:neon-cyan transition-all"
         >
-          CH
+          {siteConfig.initials}
         </Link>
 
         {/* Desktop nav */}

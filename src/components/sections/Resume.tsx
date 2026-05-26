@@ -33,7 +33,10 @@ export default function Resume() {
   return (
     <section className="py-24 px-6 glow-cyan noise-bg">
       <div className="max-w-4xl mx-auto">
-        <SectionHeading title="Resume" jpTitle="履歴書" />
+        <SectionHeading
+          title={siteConfig.sections.resume.title}
+          jpTitle={siteConfig.sections.resume.jp}
+        />
 
         {/* View Resume CTA */}
         <motion.div

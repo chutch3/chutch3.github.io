@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import SectionHeading from '@/components/ui/SectionHeading';
+import { siteConfig } from '@/config/site.config';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 
 export default function About() {
@@ -8,7 +9,10 @@ export default function About() {
   return (
     <section className="py-24 px-6 glow-cyan noise-bg">
       <div className="max-w-3xl mx-auto">
-        <SectionHeading title="About" jpTitle="自己紹介" />
+        <SectionHeading
+          title={siteConfig.sections.about.title}
+          jpTitle={siteConfig.sections.about.jp}
+        />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -16,51 +20,9 @@ export default function About() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="space-y-6 text-cyber-text/80 leading-relaxed"
         >
-          <p>
-            ML engineer at{' '}
-            <a
-              href="https://www.smarterdx.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="text-cyber-cyan hover:neon-cyan transition-all"
-            >
-              SmarterDx
-            </a>
-            , where I work on LLM-powered clinical AI. Before that — Perennial,
-            Ontra, Drizly, and a long run at Humana. Georgia Tech MS in CS (ML).
-            I've spent the last decade building ML systems end-to-end, and the
-            current wave of LLMs and agentic tooling is the most interesting
-            this work has ever been.
-          </p>
-
-          <p>
-            I think a lot about{' '}
-            <span className="text-cyber-pink">data privacy</span> — especially
-            now that LLMs are vacuuming up data at a scale we've never seen. How
-            we build these systems matters.
-          </p>
-
-          <p>
-            Outside of work I run a{' '}
-            <a
-              href="https://github.com/chutch3/homelab"
-              target="_blank"
-              rel="noreferrer"
-              className="text-cyber-cyan hover:neon-cyan transition-all"
-            >
-              homelab
-            </a>
-            , build side projects with{' '}
-            <a
-              href="https://github.com/chutch3/real-estate-agent-tools"
-              target="_blank"
-              rel="noreferrer"
-              className="text-cyber-cyan hover:neon-cyan transition-all"
-            >
-              LLM agents
-            </a>
-            , and watch a probably unhealthy amount of anime.
-          </p>
+          {siteConfig.about.paragraphs.map((html, i) => (
+            <p key={i} dangerouslySetInnerHTML={{ __html: html }} />
+          ))}
 
           <div
             ref={interestsRef}
@@ -70,7 +32,7 @@ export default function About() {
               <span className="text-cyber-cyan">$</span> cat /etc/interests
             </p>
             <p className="font-mono text-xs text-cyber-muted mt-1">
-              ml, data_privacy, anime, homelab, open_source
+              {siteConfig.about.interests.join(', ')}
             </p>
           </div>
         </motion.div>

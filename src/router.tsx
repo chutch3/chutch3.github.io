@@ -7,6 +7,19 @@ import ProjectsPage from './pages/ProjectsPage';
 import BlogPage from './pages/BlogPage';
 import AnimePage from './pages/AnimePage';
 import PrivacyPage from './pages/PrivacyPage';
+import { siteConfig } from '@/config/site.config';
+
+const featureRoutes = [
+  ...(siteConfig.features.blogPage
+    ? [{ path: 'blog', element: <BlogPage /> }]
+    : []),
+  ...(siteConfig.features.animePage
+    ? [{ path: 'anime', element: <AnimePage /> }]
+    : []),
+  ...(siteConfig.features.privacyPage
+    ? [{ path: 'privacy', element: <PrivacyPage /> }]
+    : []),
+];
 
 export const router = createHashRouter([
   {
@@ -17,9 +30,7 @@ export const router = createHashRouter([
       { path: 'about', element: <AboutPage /> },
       { path: 'resume', element: <ResumePage /> },
       { path: 'projects', element: <ProjectsPage /> },
-      { path: 'blog', element: <BlogPage /> },
-      { path: 'anime', element: <AnimePage /> },
-      { path: 'privacy', element: <PrivacyPage /> },
+      ...featureRoutes,
     ],
   },
 ]);

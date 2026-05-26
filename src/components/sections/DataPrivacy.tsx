@@ -1,14 +1,7 @@
 import { motion } from 'framer-motion';
 import SectionHeading from '@/components/ui/SectionHeading';
+import { siteConfig } from '@/config/site.config';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-
-const concerns = [
-  'Data minimization — collect only what you need',
-  'Transparency in ML systems and training data provenance',
-  'Right to deletion and meaningful user consent',
-  'Privacy-preserving ML techniques (federated learning, differential privacy)',
-  'Fighting the normalization of surveillance capitalism',
-];
 
 export default function DataPrivacy() {
   const { ref: listRef, isVisible: listVisible } = useScrollReveal();
@@ -16,7 +9,10 @@ export default function DataPrivacy() {
   return (
     <section className="py-24 px-6 glow-pink noise-bg">
       <div className="max-w-3xl mx-auto">
-        <SectionHeading title="Data Privacy" jpTitle="データプライバシー" />
+        <SectionHeading
+          title={siteConfig.sections.privacy.title}
+          jpTitle={siteConfig.sections.privacy.jp}
+        />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -24,20 +20,9 @@ export default function DataPrivacy() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="space-y-6 text-cyber-text/80 leading-relaxed"
         >
-          <p>
-            As an ML engineer, I see firsthand how data powers the systems we
-            build — and how easily the people behind that data can be forgotten.
-            Data privacy isn't just a compliance checkbox. It's a question of
-            respect.
-          </p>
-
-          <p>
-            Every model trained, every pipeline deployed, every feature
-            engineered starts with someone's information. I believe we have a
-            responsibility to treat that data with care — to minimize
-            collection, to be transparent about usage, and to give people
-            meaningful control over their own information.
-          </p>
+          {siteConfig.privacy.paragraphs.map((text, i) => (
+            <p key={i}>{text}</p>
+          ))}
 
           <div
             ref={listRef}
@@ -47,7 +32,7 @@ export default function DataPrivacy() {
               Things I care about
             </p>
             <ul className="space-y-2 text-sm">
-              {concerns.map((concern, i) => (
+              {siteConfig.privacy.concerns.map((concern, i) => (
                 <li
                   key={i}
                   className={`flex items-start gap-3 transition-all duration-500 ${
@@ -67,8 +52,7 @@ export default function DataPrivacy() {
           </div>
 
           <p className="text-cyber-muted text-sm italic">
-            More thoughts on this topic coming soon in the blog section. This is
-            something I want to write more about.
+            {siteConfig.privacy.footer}
           </p>
         </motion.div>
       </div>

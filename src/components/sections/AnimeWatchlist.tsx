@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import SectionHeading from '@/components/ui/SectionHeading';
 import NeonCard from '@/components/ui/NeonCard';
 import AnimeBadge from '@/components/ui/AnimeBadge';
-import { animeList } from '@/config/anime.config';
+import { siteConfig } from '@/config/site.config';
 import { trackEvent } from '@/lib/analytics';
-import type { WatchStatus } from '@/types';
+import type { AnimeEntry, WatchStatus } from '@/types';
 
 type FilterOption = 'all' | WatchStatus;
 
@@ -40,6 +40,7 @@ const item = {
 export default function AnimeWatchlist() {
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
 
+  const animeList = siteConfig.anime as AnimeEntry[];
   const filtered =
     activeFilter === 'all'
       ? animeList
@@ -48,7 +49,10 @@ export default function AnimeWatchlist() {
   return (
     <section className="py-24 px-6 glow-purple noise-bg">
       <div className="max-w-4xl mx-auto">
-        <SectionHeading title="Watchlist" jpTitle="アニメリスト" />
+        <SectionHeading
+          title={siteConfig.sections.anime.title}
+          jpTitle={siteConfig.sections.anime.jp}
+        />
 
         {/* Filter tabs */}
         <div className="flex flex-wrap gap-2 mb-10">
