@@ -83,6 +83,13 @@ export const animeList: AnimeEntry[] = [
 
   // Completed
   {
+    title: 'DanDaDan',
+    titleJp: 'ダンダダン',
+    rating: 10,
+    status: 'completed',
+    url: 'https://myanimelist.net/anime/57334/Dandadan',
+  },
+  {
     title: 'My Hero Academia',
     titleJp: '僕のヒーローアカデミア',
     status: 'completed',
