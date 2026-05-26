@@ -23,23 +23,26 @@ export default function About() {
             >
               SmarterDx
             </a>
-            . Before that, Perennial, Ontra, Drizly, and a long run at Humana.
-            Georgia Tech MS in CS (ML). I like building things end-to-end —
-            the model, the infra, the pipeline, the deploy.
+            , where I work on LLM-powered clinical AI. Before that —
+            Perennial, Ontra, Drizly, and a long run at Humana. Georgia
+            Tech MS in CS (ML). I've spent the last decade building ML
+            systems end-to-end, and the current wave of LLMs and agentic
+            tooling is the most interesting this work has ever been.
           </p>
 
           <p>
             I think a lot about{' '}
-            <span className="text-cyber-pink">data privacy</span> and
-            how careless most software is with the people behind the data.
-            It's something I want to write more about.
+            <span className="text-cyber-pink">data privacy</span> — especially
+            now that LLMs are vacuuming up data at a scale we've never
+            seen. How we build these systems matters.
           </p>
 
           <p>
             Outside of work I run a{' '}
             <a href="https://github.com/chutch3/homelab" target="_blank" rel="noreferrer" className="text-cyber-cyan hover:neon-cyan transition-all">homelab</a>,
-            watch a probably unhealthy amount of anime, and tinker with
-            whatever sounds interesting.
+            build side projects with{' '}
+            <a href="https://github.com/chutch3/real-estate-agent-tools" target="_blank" rel="noreferrer" className="text-cyber-cyan hover:neon-cyan transition-all">LLM agents</a>,
+            and watch a probably unhealthy amount of anime.
           </p>
 
           <div className="pt-4 border-t border-cyber-border">

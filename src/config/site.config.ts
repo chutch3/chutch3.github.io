@@ -19,6 +19,9 @@ export const siteConfig = {
     { name: 'TypeScript', category: 'languages' },
     { name: 'SQL', category: 'languages' },
     { name: 'Machine Learning', category: 'core' },
+    { name: 'LLMs', category: 'core' },
+    { name: 'Agentic Systems', category: 'core' },
+    { name: 'RAG', category: 'core' },
     { name: 'Tensorflow', category: 'core' },
     { name: 'Pytorch', category: 'core' },
     { name: 'XGBoost', category: 'core' },
@@ -61,6 +64,7 @@ export const siteConfig = {
       to: 'Present',
       companyLink: 'https://www.smarterdx.com/',
       stage: 'Unicorn',
+      summary: 'LLM-powered clinical AI for hospital revenue integrity and quality reporting.',
     },
     {
       company: 'Perennial',
@@ -69,6 +73,7 @@ export const siteConfig = {
       to: 'July 2025',
       companyLink: 'https://www.perennial.earth/',
       stage: 'Series A',
+      summary: 'Soil carbon estimation at global scale — feature engineering, distributed training, GCP infra.',
     },
     {
       company: 'Ontra',
@@ -77,6 +82,7 @@ export const siteConfig = {
       to: 'February 2023',
       companyLink: 'https://www.ontra.ai/',
       stage: 'Series B',
+      summary: 'ML model gateway and async serving stack for legal document AI.',
     },
     {
       company: 'Drizly',
@@ -85,6 +91,7 @@ export const siteConfig = {
       to: 'June 2022',
       companyLink: 'https://drizly.com/',
       stage: 'Acquired',
+      summary: 'Contextual multi-armed bandit for shelf optimization and conversion.',
     },
     {
       company: 'Humana',
@@ -93,6 +100,7 @@ export const siteConfig = {
       to: 'August 2021',
       companyLink: 'https://www.humana.com/',
       stage: 'Fortune 50',
+      summary: 'Deep learning for cost transparency, experimentation platform, TensorFlow in production.',
     },
   ] satisfies Experience[],
   educations: [

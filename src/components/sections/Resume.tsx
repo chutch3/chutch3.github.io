@@ -91,6 +91,11 @@ export default function Resume() {
                     </span>
                   )}
                 </div>
+                {exp.summary && (
+                  <p className="text-sm text-cyber-text/50 mt-1.5">
+                    {exp.summary}
+                  </p>
+                )}
               </motion.div>
             ))}
           </div>

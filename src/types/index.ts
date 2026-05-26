@@ -7,6 +7,7 @@ export interface Experience {
   to: string;
   companyLink?: string;
   stage?: CompanyStage;
+  summary?: string;
 }
 
 export interface Education {
