@@ -14,41 +14,32 @@ export default function About() {
           className="space-y-6 text-cyber-text/80 leading-relaxed"
         >
           <p>
-            I'm a Senior Machine Learning Engineer currently at{' '}
+            ML engineer at{' '}
             <a
-              href="https://www.perennial.earth/"
+              href="https://www.smarterdx.com/"
               target="_blank"
               rel="noreferrer"
               className="text-cyber-cyan hover:neon-cyan transition-all"
             >
-              Perennial
+              SmarterDx
             </a>
-            , where I build intelligent systems at the intersection of ML and
-            geospatial data. My work spans the full ML lifecycle — from
-            research and prototyping to production infrastructure.
+            . Before that, Perennial, Ontra, Drizly, and a long run at Humana.
+            Georgia Tech MS in CS (ML). I like building things end-to-end —
+            the model, the infra, the pipeline, the deploy.
           </p>
 
           <p>
-            Before Perennial, I cut my teeth at companies like Drizly, Ontra,
-            and Humana, working across recommendation systems, NLP, and
-            large-scale data pipelines. I hold an MS in Computer Science from
-            Georgia Tech with a specialization in Machine Learning.
+            I think a lot about{' '}
+            <span className="text-cyber-pink">data privacy</span> and
+            how careless most software is with the people behind the data.
+            It's something I want to write more about.
           </p>
 
           <p>
-            Beyond the day job, I care deeply about{' '}
-            <span className="text-cyber-pink">data privacy</span> — how our
-            data is collected, used, and often exploited. I believe engineers
-            have a responsibility to build systems that respect the people who
-            use them.
-          </p>
-
-          <p>
-            When I'm not writing code or thinking about ML pipelines, you'll
-            probably find me watching anime. I maintain a watchlist on this
-            site because it's an important part of who I am — not just a hobby,
-            but a medium that consistently challenges how I think about
-            storytelling and human nature.
+            Outside of work I run a{' '}
+            <a href="https://github.com/chutch3/homelab" target="_blank" rel="noreferrer" className="text-cyber-cyan hover:neon-cyan transition-all">homelab</a>,
+            watch a probably unhealthy amount of anime, and tinker with
+            whatever sounds interesting.
           </p>
 
           <div className="pt-4 border-t border-cyber-border">
@@ -56,7 +47,7 @@ export default function About() {
               <span className="text-cyber-cyan">$</span> cat /etc/interests
             </p>
             <p className="font-mono text-xs text-cyber-muted mt-1">
-              machine_learning, data_privacy, anime, home_automation, open_source
+              ml, data_privacy, anime, homelab, open_source
             </p>
           </div>
         </motion.div>

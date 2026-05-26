@@ -21,8 +21,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link
           to="/"
-          className="font-heading text-sm font-bold tracking-widest text-cyber-cyan uppercase glitch glitch-hover"
-          data-text="CH"
+          className="font-heading text-sm font-bold tracking-widest text-cyber-cyan uppercase hover:neon-cyan transition-all"
         >
           CH
         </Link>
