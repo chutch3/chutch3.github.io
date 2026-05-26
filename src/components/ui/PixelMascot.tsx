@@ -1,160 +1,174 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-const P = 0; // transparent
+// Color indices
+const _ = 0; // transparent
 const H = 1; // hair (cyan)
-const O = 2; // outline (dark)
+const K = 2; // outline/dark
 const S = 3; // skin
-const C = 4; // clothes
-const E = 5; // eyes
+const C = 4; // clothes body
+const B = 5; // clothes dark
 const A = 6; // accent (pink)
-const Y = 7; // yellow (power up)
+const W = 7; // white/shoes
 
 const PALETTE: Record<number, string> = {
-  [P]: '',
+  [_]: '',
   [H]: '#00f5ff',
-  [O]: '#0a0a0f',
-  [S]: '#e0d0c8',
+  [K]: '#0a0a0f',
+  [S]: '#e8d0c0',
   [C]: '#1a1a2e',
-  [E]: '#0a0a0f',
+  [B]: '#12121a',
   [A]: '#ff2d7b',
-  [Y]: '#f5ff00',
+  [W]: '#c8c8d0',
 };
 
 const SCALE = 4;
-const W = 14;
-const HT = 18;
+const SW = 16; // sprite width
+const SH = 22; // sprite height
 
-// Sprite frames: each is a HT x W grid
-const IDLE_1 = [
-  [P, P, P, P, P, H, H, H, H, P, P, P, P, P],
-  [P, P, P, P, H, H, H, H, H, H, P, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, O, S, S, S, S, S, S, S, S, O, P, P],
-  [P, P, S, S, E, S, S, S, E, S, S, S, P, P],
-  [P, P, S, S, S, S, S, S, S, S, S, S, P, P],
-  [P, P, S, S, S, S, A, S, S, S, S, S, P, P],
-  [P, P, P, O, S, S, S, S, S, O, P, P, P, P],
-  [P, P, P, P, O, C, C, C, O, P, P, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, P, S, O, C, C, C, O, S, P, P, P, P],
-  [P, P, P, S, P, O, O, O, P, S, P, P, P, P],
-  [P, P, P, O, P, P, P, P, P, O, P, P, P, P],
-  [P, P, O, O, P, P, P, P, P, O, O, P, P, P],
+// Pokemon-style walk cycle: stand, step-right, stand, step-left
+// Character has head, torso, arms, legs clearly defined
+
+const STAND = [
+  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
+  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
+  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
+  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, K, C, C, C, C, C, K, _, _, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, S, _, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, S, _, _, _, _],
+  [_, _, _, S, _, K, C, C, C, K, _, S, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, B, C, _, C, B, _, _, _, _, _, _],
+  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
+  [_, _, _, _, K, K, K, _, K, K, K, _, _, _, _, _],
 ];
 
-const IDLE_2 = [
-  [P, P, P, P, P, H, H, H, H, P, P, P, P, P],
-  [P, P, P, P, H, H, H, H, H, H, P, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, O, S, S, S, S, S, S, S, S, O, P, P],
-  [P, P, S, S, E, S, S, S, E, S, S, S, P, P],
-  [P, P, S, S, S, S, S, S, S, S, S, S, P, P],
-  [P, P, S, S, S, S, S, S, S, S, S, S, P, P],
-  [P, P, P, O, S, S, S, S, S, O, P, P, P, P],
-  [P, P, P, P, O, C, C, C, O, P, P, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, P, S, O, C, C, C, O, S, P, P, P, P],
-  [P, P, P, S, P, O, O, O, P, S, P, P, P, P],
-  [P, P, P, O, P, P, P, P, P, O, P, P, P, P],
-  [P, P, O, O, P, P, P, P, P, O, O, P, P, P],
+// Right foot forward, left arm forward
+const WALK_R = [
+  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
+  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
+  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
+  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, _, _, _, _, _],
+  [_, _, S, _, K, C, C, C, C, C, K, S, _, _, _, _],
+  [_, _, _, _, K, C, C, C, C, C, K, _, S, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, K, C, _, _, _, C, K, _, _, _, _, _],
+  [_, _, _, _, B, C, _, _, _, C, B, _, _, _, _, _],
+  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
+  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
+  [_, _, K, K, K, _, _, _, _, K, K, K, _, _, _, _],
+  [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
 ];
 
-const WALK_1 = [
-  [P, P, P, P, P, H, H, H, H, P, P, P, P, P],
-  [P, P, P, P, H, H, H, H, H, H, P, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, O, S, S, S, S, S, S, S, S, O, P, P],
-  [P, P, S, S, E, S, S, S, E, S, S, S, P, P],
-  [P, P, S, S, S, S, S, S, S, S, S, S, P, P],
-  [P, P, S, S, S, S, A, S, S, S, S, S, P, P],
-  [P, P, P, O, S, S, S, S, S, O, P, P, P, P],
-  [P, P, P, P, O, C, C, C, O, P, P, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, P, P, O, C, C, O, S, P, P, P, P, P],
-  [P, P, P, S, P, O, O, P, O, P, P, P, P, P],
-  [P, P, P, O, O, P, P, P, P, O, P, P, P, P],
-  [P, P, P, P, P, P, P, P, O, O, P, P, P, P],
+// Left foot forward, right arm forward
+const WALK_L = [
+  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
+  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
+  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
+  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, K, C, C, C, C, C, K, S, _, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, _, S, _, _, _],
+  [_, _, S, _, K, C, C, C, C, C, K, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, K, C, _, _, _, C, K, _, _, _, _, _],
+  [_, _, _, _, B, C, _, _, _, C, B, _, _, _, _, _],
+  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
+  [_, _, _, K, W, _, _, _, _, _, W, K, _, _, _, _],
+  [_, _, K, K, K, _, _, _, _, K, K, K, _, _, _, _],
+  [_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _],
 ];
 
-const WALK_2 = [
-  [P, P, P, P, P, H, H, H, H, P, P, P, P, P],
-  [P, P, P, P, H, H, H, H, H, H, P, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, O, S, S, S, S, S, S, S, S, O, P, P],
-  [P, P, S, S, E, S, S, S, E, S, S, S, P, P],
-  [P, P, S, S, S, S, S, S, S, S, S, S, P, P],
-  [P, P, S, S, S, S, A, S, S, S, S, S, P, P],
-  [P, P, P, O, S, S, S, S, S, O, P, P, P, P],
-  [P, P, P, P, O, C, C, C, O, P, P, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, P, S, O, C, C, O, P, P, P, P, P, P],
-  [P, P, P, P, O, O, O, P, S, P, P, P, P, P],
-  [P, P, P, P, O, P, P, O, O, P, P, P, P, P],
-  [P, P, P, O, O, P, P, P, P, P, P, P, P, P],
-];
-
-// Wave frames - arm raised
+// Wave - right arm up
 const WAVE_1 = [
-  [P, P, P, P, P, H, H, H, H, P, P, P, P, P],
-  [P, P, P, P, H, H, H, H, H, H, P, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, O, S, S, S, S, S, S, S, S, O, P, P],
-  [P, P, S, S, O, S, S, S, O, S, S, S, P, P],
-  [P, P, S, S, S, S, S, S, S, S, S, S, P, P],
-  [P, P, S, S, S, S, A, S, S, S, S, S, P, P],
-  [P, P, P, O, S, S, S, S, S, O, P, P, P, P],
-  [P, P, P, P, O, C, C, C, O, P, P, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, S, P, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, S, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, S, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, P, S, O, C, C, C, O, S, P, P, P, P],
-  [P, P, P, S, P, O, O, O, P, S, P, P, P, P],
-  [P, P, P, O, P, P, P, P, P, O, P, P, P, P],
-  [P, P, O, O, P, P, P, P, P, O, O, P, P, P],
+  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
+  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
+  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
+  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, K, C, C, C, C, C, K, _, S, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, _, S, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, S, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, B, C, _, C, B, _, _, _, _, _, _],
+  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
+  [_, _, _, _, K, K, K, _, K, K, K, _, _, _, _, _],
 ];
 
 const WAVE_2 = [
-  [P, P, P, P, P, H, H, H, H, P, P, P, P, P],
-  [P, P, P, P, H, H, H, H, H, H, P, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, P, H, H, H, H, H, H, H, H, P, P, P],
-  [P, P, O, S, S, S, S, S, S, S, S, O, P, P],
-  [P, P, S, S, O, S, S, S, O, S, S, S, P, P],
-  [P, P, S, S, S, S, S, S, S, S, S, S, P, P],
-  [P, P, S, S, S, S, A, S, S, S, S, S, P, P],
-  [P, P, P, O, S, S, S, S, S, O, P, P, P, P],
-  [P, P, P, P, O, C, C, C, O, P, P, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, S, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, S, P, P],
-  [P, P, O, C, C, C, C, C, C, C, O, P, P, P],
-  [P, P, P, O, C, C, C, C, C, O, P, P, P, P],
-  [P, P, P, S, O, C, C, C, O, S, P, P, P, P],
-  [P, P, P, S, P, O, O, O, P, S, P, P, P, P],
-  [P, P, P, O, P, P, P, P, P, O, P, P, P, P],
-  [P, P, O, O, P, P, P, P, P, O, O, P, P, P],
+  [_, _, _, _, _, H, H, H, H, H, H, _, _, _, _, _],
+  [_, _, _, _, H, H, H, H, H, H, H, H, _, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, H, H, H, H, H, H, H, H, H, H, _, _, _],
+  [_, _, _, K, S, S, S, S, S, S, S, S, K, _, _, _],
+  [_, _, _, S, S, K, S, S, S, K, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, S, S, S, S, S, S, _, _, _],
+  [_, _, _, S, S, S, S, A, S, S, S, S, S, _, _, _],
+  [_, _, _, _, K, S, S, S, S, S, K, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, S, _, _, _],
+  [_, _, _, _, K, C, C, C, C, C, K, S, _, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, _, _, _, _, _],
+  [_, _, _, S, K, C, C, C, C, C, K, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, C, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, C, _, C, K, _, _, _, _, _, _],
+  [_, _, _, _, _, B, C, _, C, B, _, _, _, _, _, _],
+  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
+  [_, _, _, _, _, K, W, _, W, K, _, _, _, _, _, _],
+  [_, _, _, _, K, K, K, _, K, K, K, _, _, _, _, _],
 ];
 
-type BehaviorState = 'idle' | 'walking' | 'waving' | 'powerup' | 'fleeing';
+const WALK_FRAMES = [STAND, WALK_R, STAND, WALK_L];
+const WAVE_FRAMES = [WAVE_1, WAVE_2];
 
-const SPEECH_BUBBLES = [
+type Behavior =
+  | 'idle'
+  | 'walking'
+  | 'waving'
+  | 'powerup'
+  | 'fleeing'
+  | 'jumping'
+  | 'offscreen';
+
+const SPEECH = [
   'こんにちは!',
   '...zzZ',
   'NANI?!',
@@ -165,7 +179,29 @@ const SPEECH_BUBBLES = [
   'omae wa...',
   '✧*。',
   'yare yare',
+  'senpai!',
+  '~nyaa',
+  'kawaii',
+  'gg',
+  'brb',
 ];
+
+interface Platform {
+  y: number; // distance from bottom of viewport
+  xMin: number; // left edge (fraction of viewport width)
+  xMax: number; // right edge (fraction of viewport width)
+}
+
+function getPlatforms(): Platform[] {
+  return [
+    { y: 20, xMin: 0, xMax: 1 }, // ground level
+    { y: 180, xMin: 0.05, xMax: 0.4 }, // lower left
+    { y: 180, xMin: 0.6, xMax: 0.95 }, // lower right
+    { y: 320, xMin: 0.2, xMax: 0.7 }, // mid center
+    { y: 440, xMin: 0, xMax: 0.35 }, // upper left
+    { y: 440, xMin: 0.65, xMax: 1 }, // upper right
+  ];
+}
 
 function mirrorFrame(frame: number[][]): number[][] {
   return frame.map((row) => [...row].reverse());
@@ -173,22 +209,6 @@ function mirrorFrame(frame: number[][]): number[][] {
 
 export default function PixelMascot() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const stateRef = useRef({
-    x: 100 + Math.random() * 300,
-    y: 0,
-    behavior: 'walking' as BehaviorState,
-    frame: 0,
-    tick: 0,
-    direction: 1,
-    behaviorTimer: 60 + Math.random() * 60,
-    speechBubble: '',
-    speechTimer: 0,
-    powerupFrame: 0,
-    mouseX: -1000,
-    mouseY: -1000,
-    groundY: 0,
-  });
-
   const [speech, setSpeech] = useState('');
   const [speechPos, setSpeechPos] = useState({ x: 0, y: 0 });
   const [showPowerFx, setShowPowerFx] = useState(false);
@@ -197,11 +217,11 @@ export default function PixelMascot() {
   const drawSprite = useCallback(
     (ctx: CanvasRenderingContext2D, frame: number[][], flip: boolean) => {
       const data = flip ? mirrorFrame(frame) : frame;
-      ctx.clearRect(0, 0, W * SCALE, HT * SCALE);
-      for (let y = 0; y < HT; y++) {
-        for (let x = 0; x < W; x++) {
+      ctx.clearRect(0, 0, SW * SCALE, SH * SCALE);
+      for (let y = 0; y < SH; y++) {
+        for (let x = 0; x < SW; x++) {
           const pixel = data[y][x];
-          if (pixel === P) continue;
+          if (pixel === _) continue;
           ctx.fillStyle = PALETTE[pixel];
           ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
         }
@@ -216,160 +236,236 @@ export default function PixelMascot() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const s = stateRef.current;
-    s.groundY =
-      typeof window !== 'undefined'
-        ? window.innerHeight - HT * SCALE - 20
-        : 600;
-    s.y = s.groundY;
+    const platforms = getPlatforms();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const sprW = SW * SCALE;
+    const sprH = SH * SCALE;
 
-    const onMouseMove = (e: MouseEvent) => {
+    const s = {
+      x: 100 + Math.random() * 200,
+      y: vh - 20 - sprH,
+      platform: 0,
+      behavior: 'walking' as Behavior,
+      direction: 1,
+      frame: 0,
+      tick: 0,
+      timer: 80 + Math.random() * 60,
+      speed: 1.2,
+      // jump state
+      jumpVy: 0,
+      jumpTarget: -1,
+      grounded: true,
+      // mouse
+      mouseX: -1000,
+      mouseY: -1000,
+      // speech
+      speechTimer: 0,
+    };
+
+    function platLeft(p: Platform) {
+      return p.xMin * vw;
+    }
+
+    function platRight(p: Platform) {
+      return p.xMax * vw - sprW;
+    }
+
+    const onMouse = (e: MouseEvent) => {
       s.mouseX = e.clientX;
       s.mouseY = e.clientY;
     };
-    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mousemove', onMouse);
 
     const onResize = () => {
-      s.groundY = window.innerHeight - HT * SCALE - 20;
-      s.y = s.groundY;
-      if (s.x > window.innerWidth - W * SCALE) {
-        s.x = window.innerWidth - W * SCALE - 20;
-      }
+      const newVw = window.innerWidth;
+      const newVh = window.innerHeight;
+      const plat = platforms[s.platform];
+      s.y = newVh - plat.y - sprH;
+      if (s.x > plat.xMax * newVw - sprW) s.x = plat.xMax * newVw - sprW;
+      if (s.x < plat.xMin * newVw) s.x = plat.xMin * newVw;
     };
     window.addEventListener('resize', onResize);
 
     const loop = setInterval(() => {
       s.tick++;
+      const curPlat = platforms[s.platform];
+      const cw = window.innerWidth;
+      const ch = window.innerHeight;
 
-      const charCenterX = s.x + (W * SCALE) / 2;
-      const charCenterY = s.y + (HT * SCALE) / 2;
-      const dx = s.mouseX - charCenterX;
-      const dy = s.mouseY - charCenterY;
-      const distToCursor = Math.sqrt(dx * dx + dy * dy);
-
-      // Flee from cursor if close
-      if (distToCursor < 120 && s.behavior !== 'powerup') {
+      // Cursor flee
+      const cx = s.x + sprW / 2;
+      const cy = s.y + sprH / 2;
+      const dx = s.mouseX - cx;
+      const dy = s.mouseY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (
+        dist < 130 &&
+        s.behavior !== 'powerup' &&
+        s.behavior !== 'jumping' &&
+        s.behavior !== 'offscreen'
+      ) {
         s.behavior = 'fleeing';
         s.direction = dx > 0 ? -1 : 1;
-        s.behaviorTimer = 30;
+        s.timer = 25;
+        s.speed = 2.5;
       }
 
       // Behavior timer
-      s.behaviorTimer--;
-      if (s.behaviorTimer <= 0 && s.behavior !== 'fleeing') {
-        const roll = Math.random();
-        if (roll < 0.4) {
-          s.behavior = 'idle';
-          s.behaviorTimer = 120 + Math.random() * 180;
-          if (Math.random() < 0.25) {
-            const msg =
-              SPEECH_BUBBLES[Math.floor(Math.random() * SPEECH_BUBBLES.length)];
-            s.speechBubble = msg;
-            s.speechTimer = 80;
-            setSpeech(msg);
-            setSpeechPos({
-              x: s.x + (W * SCALE) / 2,
-              y: s.y - 12,
-            });
+      if (s.behavior !== 'jumping' && s.behavior !== 'offscreen') {
+        s.timer--;
+        if (s.timer <= 0) {
+          const roll = Math.random();
+          s.speed = 1.2;
+          if (roll < 0.3) {
+            s.behavior = 'idle';
+            s.timer = 80 + Math.random() * 120;
+            if (Math.random() < 0.3) {
+              const msg = SPEECH[Math.floor(Math.random() * SPEECH.length)];
+              setSpeech(msg);
+              s.speechTimer = 70;
+            }
+          } else if (roll < 0.65) {
+            s.behavior = 'walking';
+            s.direction = Math.random() < 0.5 ? -1 : 1;
+            s.timer = 80 + Math.random() * 150;
+          } else if (roll < 0.75) {
+            s.behavior = 'waving';
+            s.timer = 50;
+            setSpeech('hey! ✧');
+            s.speechTimer = 45;
+          } else if (roll < 0.82) {
+            s.behavior = 'powerup';
+            s.timer = 70;
+            setSpeech('HAAA!!');
+            s.speechTimer = 60;
+            setShowPowerFx(true);
+            setPowerPos({ x: s.x, y: s.y });
+          } else if (roll < 0.92) {
+            // Jump to another platform
+            const others = platforms
+              .map((_, i) => i)
+              .filter((i) => i !== s.platform);
+            const target = others[Math.floor(Math.random() * others.length)];
+            s.behavior = 'jumping';
+            s.jumpTarget = target;
+            s.jumpVy = -8;
+            s.grounded = false;
+          } else {
+            // Walk offscreen
+            s.behavior = 'offscreen';
+            s.direction = Math.random() < 0.5 ? -1 : 1;
+            s.timer = 999;
+            s.speed = 1.5;
           }
-        } else if (roll < 0.85) {
-          s.behavior = 'walking';
-          s.direction = Math.random() < 0.5 ? -1 : 1;
-          s.behaviorTimer = 60 + Math.random() * 120;
-        } else if (roll < 0.95) {
-          s.behavior = 'waving';
-          s.behaviorTimer = 60;
-          s.speechBubble = 'hey! ✧';
-          s.speechTimer = 50;
-          setSpeech('hey! ✧');
-          setSpeechPos({
-            x: s.x + (W * SCALE) / 2,
-            y: s.y - 12,
-          });
-        } else {
-          s.behavior = 'powerup';
-          s.behaviorTimer = 80;
-          s.powerupFrame = 0;
-          s.speechBubble = 'HAAA!!';
-          s.speechTimer = 70;
-          setSpeech('HAAA!!');
-          setSpeechPos({
-            x: s.x + (W * SCALE) / 2,
-            y: s.y - 12,
-          });
-          setShowPowerFx(true);
-          setPowerPos({ x: s.x, y: s.y });
-        }
-      }
-
-      if (s.behavior === 'fleeing') {
-        s.x += s.direction * 3;
-        if (s.behaviorTimer <= 0) {
-          s.behavior = 'idle';
-          s.behaviorTimer = 60;
         }
       }
 
       // Movement
-      if (s.behavior === 'walking') {
-        s.x += s.direction * 1;
+      if (
+        s.behavior === 'walking' ||
+        s.behavior === 'fleeing' ||
+        s.behavior === 'offscreen'
+      ) {
+        s.x += s.direction * s.speed;
       }
 
-      // Bounds
-      const maxX = window.innerWidth - W * SCALE - 10;
-      if (s.x < 10) {
-        s.x = 10;
-        s.direction = 1;
+      // Platform bounds for walking/fleeing
+      if (s.behavior === 'walking' || s.behavior === 'fleeing') {
+        const left = platLeft(curPlat);
+        const right = platRight(curPlat);
+        if (s.x <= left) {
+          s.x = left;
+          s.direction = 1;
+        }
+        if (s.x >= right) {
+          s.x = right;
+          s.direction = -1;
+        }
       }
-      if (s.x > maxX) {
-        s.x = maxX;
-        s.direction = -1;
+
+      // Offscreen logic
+      if (s.behavior === 'offscreen') {
+        if (s.x < -sprW - 20 || s.x > cw + 20) {
+          // Reappear on a random platform from the opposite side
+          const newPlat = Math.floor(Math.random() * platforms.length);
+          s.platform = newPlat;
+          const p = platforms[newPlat];
+          s.y = ch - p.y - sprH;
+          s.direction = s.x < 0 ? 1 : -1;
+          s.x = s.direction === 1 ? p.xMin * cw - sprW : p.xMax * cw;
+          s.behavior = 'walking';
+          s.timer = 60 + Math.random() * 100;
+          s.speed = 1.2;
+        }
+      }
+
+      // Jump physics
+      if (s.behavior === 'jumping') {
+        const targetPlat = platforms[s.jumpTarget];
+        const targetY = ch - targetPlat.y - sprH;
+        const targetX =
+          platLeft(targetPlat) +
+          (platRight(targetPlat) - platLeft(targetPlat)) *
+            (0.3 + Math.random() * 0.4);
+
+        s.jumpVy += 0.35;
+        s.y += s.jumpVy;
+        // Move horizontally toward target
+        const dxj = targetX - s.x;
+        s.x += dxj * 0.04;
+        s.direction = dxj > 0 ? 1 : -1;
+
+        if (s.jumpVy > 0 && s.y >= targetY) {
+          s.y = targetY;
+          s.platform = s.jumpTarget;
+          s.grounded = true;
+          s.behavior = 'idle';
+          s.timer = 30 + Math.random() * 40;
+          s.jumpVy = 0;
+        }
       }
 
       // Speech timer
       if (s.speechTimer > 0) {
         s.speechTimer--;
-        setSpeechPos({
-          x: s.x + (W * SCALE) / 2,
-          y: s.y - 12,
-        });
+        setSpeechPos({ x: s.x + sprW / 2, y: s.y - 8 });
         if (s.speechTimer <= 0) {
           setSpeech('');
           setShowPowerFx(false);
         }
       }
 
-      // Animation frame
+      // Select animation frame
       let sprite: number[][];
       const flip = s.direction === -1;
 
       switch (s.behavior) {
         case 'walking':
         case 'fleeing':
-          s.frame = Math.floor(s.tick / 8) % 2;
-          sprite = s.frame === 0 ? WALK_1 : WALK_2;
+        case 'offscreen':
+          sprite = WALK_FRAMES[Math.floor(s.tick / 6) % 4];
           break;
         case 'waving':
-          s.frame = Math.floor(s.tick / 10) % 2;
-          sprite = s.frame === 0 ? WAVE_1 : WAVE_2;
+          sprite = WAVE_FRAMES[Math.floor(s.tick / 8) % 2];
+          break;
+        case 'jumping':
+          sprite = s.jumpVy < 0 ? WALK_R : WALK_L;
           break;
         case 'powerup':
-          s.powerupFrame++;
-          sprite = s.powerupFrame % 4 < 2 ? IDLE_1 : IDLE_2;
+          sprite = s.tick % 4 < 2 ? STAND : WALK_R;
           break;
         default:
-          s.frame = Math.floor(s.tick / 30) % 2;
-          sprite = s.frame === 0 ? IDLE_1 : IDLE_2;
+          sprite = STAND;
       }
 
-      // Position canvas
-      canvas.style.transform = `translate(${s.x}px, ${s.y}px)`;
+      canvas.style.transform = `translate(${Math.round(s.x)}px, ${Math.round(s.y)}px)`;
       drawSprite(ctx, sprite, flip);
     }, 1000 / 20);
 
     return () => {
       clearInterval(loop);
-      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mousemove', onMouse);
       window.removeEventListener('resize', onResize);
     };
   }, [drawSprite]);
@@ -378,14 +474,14 @@ export default function PixelMascot() {
     <>
       <canvas
         ref={canvasRef}
-        width={W * SCALE}
-        height={HT * SCALE}
+        width={SW * SCALE}
+        height={SH * SCALE}
         className="fixed top-0 left-0 z-40 pointer-events-none"
         style={{ imageRendering: 'pixelated' }}
       />
       {speech && (
         <div
-          className="fixed z-40 pointer-events-none transition-opacity duration-300"
+          className="fixed z-40 pointer-events-none"
           style={{
             left: speechPos.x,
             top: speechPos.y,
@@ -402,10 +498,10 @@ export default function PixelMascot() {
         <div
           className="fixed z-30 pointer-events-none"
           style={{
-            left: powerPos.x - 10,
-            top: powerPos.y - 10,
-            width: W * SCALE + 20,
-            height: HT * SCALE + 20,
+            left: powerPos.x - 15,
+            top: powerPos.y - 15,
+            width: SW * SCALE + 30,
+            height: SH * SCALE + 30,
           }}
         >
           <div className="w-full h-full rounded-full bg-cyber-yellow/10 animate-ping" />
