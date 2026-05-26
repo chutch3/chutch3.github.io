@@ -1,21 +1,16 @@
-import { FaGithub, FaLinkedin, FaInstagram, FaEnvelope } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
 import { siteConfig } from '@/config/site.config';
 
 const socialLinks = [
-  {
-    icon: FaGithub,
-    href: `https://github.com/${siteConfig.social.github}`,
-    label: 'GitHub',
-  },
   {
     icon: FaLinkedin,
     href: `https://linkedin.com/in/${siteConfig.social.linkedin}`,
     label: 'LinkedIn',
   },
   {
-    icon: FaInstagram,
-    href: `https://instagram.com/${siteConfig.social.instagram}`,
-    label: 'Instagram',
+    icon: FaGithub,
+    href: `https://github.com/${siteConfig.social.github}`,
+    label: 'GitHub',
   },
   {
     icon: FaEnvelope,

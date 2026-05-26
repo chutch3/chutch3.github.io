@@ -6,11 +6,10 @@ import Footer from '@/components/layout/Footer';
 import ScanlineOverlay from '@/components/layout/ScanlineOverlay';
 
 const pageVariants = {
-  initial: { opacity: 0, y: 20, filter: 'blur(4px)' },
+  initial: { opacity: 0, y: 20 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: { duration: 0.4, ease: 'easeOut' },
   },
   exit: {

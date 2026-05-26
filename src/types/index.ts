@@ -43,9 +43,7 @@ export interface AnimeEntry {
 
 export interface SocialLinks {
   linkedin?: string;
-  instagram?: string;
   github?: string;
   email?: string;
   website?: string;
-  twitter?: string;
 }
