@@ -8,19 +8,20 @@ const S = 3; // skin
 const C = 4; // clothes
 const B = 5; // clothes dark
 const A = 6; // accent (pink)
-const W = 7; // shoes
+const G = 7; // glow (cyan, for shoes/details)
 
 const PALETTE: Record<number, string> = {
   [x]: '',
   [H]: '#00f5ff',
-  [K]: '#0a0a0f',
-  [S]: '#e8d0c0',
+  [K]: '#12121a',
+  [S]: '#6b6b80',
   [C]: '#1a1a2e',
-  [B]: '#12121a',
+  [B]: '#0a0a0f',
   [A]: '#ff2d7b',
-  [W]: '#c8c8d0',
+  [G]: '#00f5ff',
 };
 
+const GLOW_COLOR = 'rgba(0, 245, 255, 0.25)';
 const SCALE = 4;
 const SPW = 16;
 const SPH = 22;
@@ -46,8 +47,8 @@ const STAND = [
   [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
   [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
   [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
-  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
   [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
 ];
 
@@ -71,8 +72,8 @@ const WALK_R = [
   [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
   [x,x,x,x,K,C,x,x,x,C,K,x,x,x,x,x],
   [x,x,x,x,B,C,x,x,x,C,B,x,x,x,x,x],
-  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
-  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
+  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
+  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
   [x,x,K,K,K,x,x,x,x,K,K,K,x,x,x,x],
   [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
 ];
@@ -97,8 +98,8 @@ const WALK_L = [
   [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
   [x,x,x,x,K,C,x,x,x,C,K,x,x,x,x,x],
   [x,x,x,x,B,C,x,x,x,C,B,x,x,x,x,x],
-  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
-  [x,x,x,K,W,x,x,x,x,x,W,K,x,x,x,x],
+  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
+  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
   [x,x,K,K,K,x,x,x,x,K,K,K,x,x,x,x],
   [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
 ];
@@ -124,8 +125,8 @@ const WAVE_1 = [
   [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
   [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
   [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
-  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
   [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
 ];
 
@@ -150,8 +151,8 @@ const WAVE_2 = [
   [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
   [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
   [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
-  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,W,x,W,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
+  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
   [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
 ];
 
@@ -172,7 +173,7 @@ const SIT = [
   [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
   [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
   [x,x,x,x,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,x,x,B,W,W,x,W,W,B,x,x,x,x,x],
+  [x,x,x,x,B,G,G,x,G,G,B,x,x,x,x,x],
   [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
   [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
   [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
@@ -186,7 +187,7 @@ const WAVE_FRAMES = [WAVE_1, WAVE_2];
 
 type Behavior =
   | 'offscreen'
-  | 'entering'
+  | 'glitchIn'
   | 'walking'
   | 'idle'
   | 'waving'
@@ -196,7 +197,8 @@ type Behavior =
   | 'sitting'
   | 'fleeing'
   | 'jumping'
-  | 'exiting';
+  | 'glitchOut'
+  | 'clicked';
 
 interface Platform {
   y: number;
@@ -242,8 +244,8 @@ const ROUTE_PLATFORMS: Record<string, Platform[]> = {
 };
 
 const IDLE_SPEECH = ['...zzZ', '♪♪♪', '✧*。', 'yare yare', '( ◕‿◕ )'];
-
 const NARUTO_SPEECH = ['ikuzo!!', 'dattebayo!'];
+const CLICK_SPEECH = ['NANI?!', 'oi!', 'やめて!', '(╯°□°)╯', 'hey!!', '!?'];
 
 function mirrorFrame(frame: number[][]): number[][] {
   return frame.map((row) => [...row].reverse());
@@ -254,18 +256,55 @@ export default function PixelMascot() {
   const location = useLocation();
   const [speech, setSpeech] = useState('');
   const [speechPos, setSpeechPos] = useState({ x: 0, y: 0 });
-  const [showPowerFx, setShowPowerFx] = useState(false);
-  const [powerPos, setPowerPos] = useState({ x: 0, y: 0 });
+  const [glitchFx, setGlitchFx] = useState(false);
+  const [fxPos, setFxPos] = useState({ x: 0, y: 0 });
   const routeRef = useRef(location.pathname);
+  const clickRef = useRef(false);
 
   useEffect(() => {
     routeRef.current = location.pathname;
   }, [location.pathname]);
 
   const drawSprite = useCallback(
-    (ctx: CanvasRenderingContext2D, frame: number[][], flip: boolean) => {
+    (
+      ctx: CanvasRenderingContext2D,
+      frame: number[][],
+      flip: boolean,
+      glitch = false,
+    ) => {
       const data = flip ? mirrorFrame(frame) : frame;
-      ctx.clearRect(0, 0, SPW * SCALE, SPH * SCALE);
+      const cw = SPW * SCALE;
+      const ch = SPH * SCALE;
+      ctx.clearRect(0, 0, cw, ch);
+
+      // Neon glow underlay
+      ctx.shadowColor = '#00f5ff';
+      ctx.shadowBlur = 6;
+      for (let row = 0; row < SPH; row++) {
+        for (let col = 0; col < SPW; col++) {
+          if (data[row][col] === x) continue;
+          ctx.fillStyle = GLOW_COLOR;
+          ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
+        }
+      }
+      ctx.shadowBlur = 0;
+
+      // Glitch: offset color channels
+      if (glitch) {
+        ctx.globalAlpha = 0.4;
+        for (let row = 0; row < SPH; row++) {
+          for (let col = 0; col < SPW; col++) {
+            if (data[row][col] === x) continue;
+            ctx.fillStyle = '#00f5ff';
+            ctx.fillRect(col * SCALE - 3, row * SCALE, SCALE, SCALE);
+            ctx.fillStyle = '#ff2d7b';
+            ctx.fillRect(col * SCALE + 3, row * SCALE, SCALE, SCALE);
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Main sprite
       for (let row = 0; row < SPH; row++) {
         for (let col = 0; col < SPW; col++) {
           const pixel = data[row][col];
@@ -304,12 +343,12 @@ export default function PixelMascot() {
       sleepBubbleGrow: 0,
       visible: false,
       behaviorsThisVisit: 0,
+      glitchTimer: 0,
     };
 
     function getPlatformsForRoute(): Platform[] {
       return ROUTE_PLATFORMS[routeRef.current] || ROUTE_PLATFORMS['/'];
     }
-
     function platLeft(p: Platform) {
       return p.xMin * window.innerWidth;
     }
@@ -330,13 +369,16 @@ export default function PixelMascot() {
       s.platform = Math.floor(Math.random() * plats.length);
       const p = plats[s.platform];
       s.direction = Math.random() < 0.5 ? 1 : -1;
-      s.posX = s.direction === 1 ? -sprW : window.innerWidth + sprW;
+      const edge = s.direction === 1 ? platLeft(p) + 20 : platRight(p) - 20;
+      s.posX = edge;
       s.posY = platYPos(p);
-      s.behavior = 'entering';
-      s.speed = 1.2;
+      s.behavior = 'glitchIn';
+      s.glitchTimer = 15;
       s.timer = 999;
       s.visible = true;
       s.behaviorsThisVisit = 0;
+      setGlitchFx(true);
+      setFxPos({ x: s.posX, y: s.posY });
     }
 
     function pickBehavior() {
@@ -352,11 +394,10 @@ export default function PixelMascot() {
       } else if (roll < 0.3) {
         s.behavior = 'idle';
         s.timer = 40 + Math.random() * 60;
-        if (Math.random() < 0.5) {
+        if (Math.random() < 0.5)
           showSpeech(
             IDLE_SPEECH[Math.floor(Math.random() * IDLE_SPEECH.length)],
           );
-        }
       } else if (roll < 0.4) {
         s.behavior = 'waving';
         s.timer = 45;
@@ -365,8 +406,8 @@ export default function PixelMascot() {
         s.behavior = 'powerup';
         s.timer = 65;
         showSpeech('HAAA!!', 55);
-        setShowPowerFx(true);
-        setPowerPos({ x: s.posX, y: s.posY });
+        setGlitchFx(true);
+        setFxPos({ x: s.posX, y: s.posY });
       } else if (roll < 0.58) {
         s.behavior = 'narutorun';
         s.direction = Math.random() < 0.5 ? -1 : 1;
@@ -397,10 +438,10 @@ export default function PixelMascot() {
           s.timer = 50;
         }
       } else if (canExit) {
-        s.behavior = 'exiting';
-        s.direction = Math.random() < 0.5 ? -1 : 1;
-        s.speed = 1.5;
-        s.timer = 999;
+        s.behavior = 'glitchOut';
+        s.glitchTimer = 15;
+        setGlitchFx(true);
+        setFxPos({ x: s.posX, y: s.posY });
       } else {
         s.behavior = 'walking';
         s.timer = 50 + Math.random() * 60;
@@ -413,10 +454,36 @@ export default function PixelMascot() {
     };
     window.addEventListener('mousemove', onMouse);
 
+    const onClick = () => {
+      clickRef.current = true;
+    };
+    canvas.addEventListener('click', onClick);
+
     const loop = setInterval(() => {
       s.tick++;
 
-      // Offscreen: wait, then enter
+      // Handle click/tap
+      if (
+        clickRef.current &&
+        s.visible &&
+        s.behavior !== 'offscreen' &&
+        s.behavior !== 'glitchIn' &&
+        s.behavior !== 'glitchOut'
+      ) {
+        clickRef.current = false;
+        s.behavior = 'clicked';
+        s.timer = 30;
+        s.glitchTimer = 8;
+        showSpeech(
+          CLICK_SPEECH[Math.floor(Math.random() * CLICK_SPEECH.length)],
+          28,
+        );
+        setGlitchFx(true);
+        setFxPos({ x: s.posX, y: s.posY });
+      }
+      clickRef.current = false;
+
+      // Offscreen
       if (s.behavior === 'offscreen') {
         s.timer--;
         canvas.style.opacity = '0';
@@ -428,11 +495,52 @@ export default function PixelMascot() {
       const plats = getPlatformsForRoute();
       const curPlat = plats[s.platform] || plats[0];
 
+      // Glitch entrance
+      if (s.behavior === 'glitchIn') {
+        s.glitchTimer--;
+        if (s.glitchTimer <= 0) {
+          setGlitchFx(false);
+          s.behavior = 'idle';
+          s.timer = 30 + Math.random() * 40;
+        }
+      }
+
+      // Glitch exit
+      if (s.behavior === 'glitchOut') {
+        s.glitchTimer--;
+        if (s.glitchTimer <= 0) {
+          setGlitchFx(false);
+          s.behavior = 'offscreen';
+          s.timer = 150 + Math.random() * 250;
+          s.visible = false;
+        }
+      }
+
+      // Click reaction: small jump + glitch
+      if (s.behavior === 'clicked') {
+        s.timer--;
+        if (s.timer > 20) {
+          s.posY -= 2;
+        } else if (s.timer > 10) {
+          s.posY += 2;
+        }
+        s.glitchTimer = Math.max(0, s.glitchTimer - 1);
+        if (s.glitchTimer <= 0) setGlitchFx(false);
+        if (s.timer <= 0) {
+          s.posY = platYPos(curPlat);
+          s.behavior = 'fleeing';
+          s.direction = Math.random() < 0.5 ? -1 : 1;
+          s.timer = 25;
+          s.speed = 2.5;
+        }
+      }
+
       // Cursor flee
       if (
         s.behavior !== 'jumping' &&
-        s.behavior !== 'exiting' &&
-        s.behavior !== 'entering'
+        s.behavior !== 'glitchOut' &&
+        s.behavior !== 'glitchIn' &&
+        s.behavior !== 'clicked'
       ) {
         const cx = s.posX + sprW / 2;
         const cy = s.posY + sprH / 2;
@@ -443,31 +551,6 @@ export default function PixelMascot() {
           s.direction = dx > 0 ? -1 : 1;
           s.timer = 25;
           s.speed = 2.5;
-        }
-      }
-
-      // Entering
-      if (s.behavior === 'entering') {
-        s.posX += s.direction * s.speed;
-        const left = platLeft(curPlat);
-        const right = platRight(curPlat);
-        const targetX = left + (right - left) * (0.2 + Math.random() * 0.6);
-        if (
-          (s.direction === 1 && s.posX >= targetX) ||
-          (s.direction === -1 && s.posX <= targetX)
-        ) {
-          s.behavior = 'idle';
-          s.timer = 30 + Math.random() * 40;
-        }
-      }
-
-      // Exiting
-      if (s.behavior === 'exiting') {
-        s.posX += s.direction * s.speed;
-        if (s.posX < -sprW - 20 || s.posX > window.innerWidth + 20) {
-          s.behavior = 'offscreen';
-          s.timer = 150 + Math.random() * 250;
-          s.visible = false;
         }
       }
 
@@ -520,35 +603,46 @@ export default function PixelMascot() {
         }
       }
 
-      // Timer
+      // Timer for behavior-driven states
       if (
         s.behavior !== 'offscreen' &&
-        s.behavior !== 'entering' &&
-        s.behavior !== 'exiting' &&
-        s.behavior !== 'jumping'
+        s.behavior !== 'glitchIn' &&
+        s.behavior !== 'glitchOut' &&
+        s.behavior !== 'jumping' &&
+        s.behavior !== 'clicked'
       ) {
         s.timer--;
         if (s.timer <= 0) pickBehavior();
       }
 
-      // Speech
+      // Speech pos
       if (s.speechTimer > 0) {
         s.speechTimer--;
         setSpeechPos({ x: s.posX + sprW / 2, y: s.posY - 8 });
         if (s.speechTimer <= 0) {
           setSpeech('');
-          setShowPowerFx(false);
         }
+      }
+
+      // Power-up glitch effect timing
+      if (s.behavior === 'powerup') {
+        if (s.timer < 50) {
+          setGlitchFx(false);
+        }
+        setFxPos({ x: s.posX, y: s.posY });
       }
 
       // Sprite selection
       let sprite: number[][];
       const flip = s.direction === -1;
+      const isGlitching =
+        s.behavior === 'glitchIn' ||
+        s.behavior === 'glitchOut' ||
+        s.behavior === 'powerup' ||
+        (s.behavior === 'clicked' && s.glitchTimer > 0);
 
       switch (s.behavior) {
         case 'walking':
-        case 'entering':
-        case 'exiting':
           sprite = WALK_FRAMES[Math.floor(s.tick / 6) % 4];
           break;
         case 'fleeing':
@@ -568,17 +662,35 @@ export default function PixelMascot() {
         case 'sitting':
           sprite = SIT;
           break;
+        case 'clicked':
+          sprite = s.tick % 2 === 0 ? STAND : WALK_R;
+          break;
+        case 'glitchIn':
+        case 'glitchOut':
+          sprite =
+            s.glitchTimer % 3 === 0
+              ? STAND
+              : s.glitchTimer % 3 === 1
+                ? WALK_R
+                : WALK_L;
+          break;
         default:
           sprite = STAND;
       }
 
+      // Flicker opacity during glitch entrance/exit
+      if (s.behavior === 'glitchIn' || s.behavior === 'glitchOut') {
+        canvas.style.opacity = s.tick % 2 === 0 ? '1' : '0.3';
+      }
+
       canvas.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY)}px)`;
-      drawSprite(ctx, sprite, flip);
+      drawSprite(ctx, sprite, flip, isGlitching);
     }, 1000 / 20);
 
     return () => {
       clearInterval(loop);
       window.removeEventListener('mousemove', onMouse);
+      canvas.removeEventListener('click', onClick);
     };
   }, [drawSprite]);
 
@@ -588,7 +700,7 @@ export default function PixelMascot() {
         ref={canvasRef}
         width={SPW * SCALE}
         height={SPH * SCALE}
-        className="fixed top-0 left-0 z-40 pointer-events-none opacity-0 transition-opacity duration-500"
+        className="fixed top-0 left-0 z-40 cursor-pointer opacity-0 transition-opacity duration-300"
         style={{ imageRendering: 'pixelated' }}
       />
       {speech && (
@@ -600,23 +712,31 @@ export default function PixelMascot() {
             transform: 'translate(-50%, -100%)',
           }}
         >
-          <div className="bg-cyber-surface border border-cyber-cyan/30 rounded px-2 py-1 text-[10px] font-mono text-cyber-cyan whitespace-nowrap shadow-[0_0_10px_rgba(0,245,255,0.1)]">
-            {speech}
-            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-cyber-cyan/30" />
+          <div className="animated-border rounded px-2 py-1">
+            <div className="text-[10px] font-mono text-cyber-cyan whitespace-nowrap">
+              {speech}
+            </div>
           </div>
         </div>
       )}
-      {showPowerFx && (
+      {glitchFx && (
         <div
           className="fixed z-30 pointer-events-none"
           style={{
-            left: powerPos.x - 15,
-            top: powerPos.y - 15,
-            width: SPW * SCALE + 30,
-            height: SPH * SCALE + 30,
+            left: fxPos.x - 10,
+            top: fxPos.y - 10,
+            width: SPW * SCALE + 20,
+            height: SPH * SCALE + 20,
           }}
         >
-          <div className="w-full h-full rounded-full bg-cyber-yellow/10 animate-ping" />
+          <div
+            className="w-full h-full"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(0,245,255,0.15) 0%, transparent 70%)',
+              animation: 'glow-pulse 0.3s ease-in-out infinite alternate',
+            }}
+          />
         </div>
       )}
     </>
