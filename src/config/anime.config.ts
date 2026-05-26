@@ -81,6 +81,12 @@ export const animeList: AnimeEntry[] = [
     url: 'https://myanimelist.net/anime/6793/Deadman_Wonderland',
   },
   {
+    title: 'One Punch Man',
+    titleJp: 'ワンパンマン',
+    status: 'watching',
+    url: 'https://myanimelist.net/anime/30276/One_Punch_Man',
+  },
+  {
     title: 'Ergo Proxy',
     titleJp: 'エルゴプラクシー',
     status: 'watching',
@@ -124,11 +130,11 @@ export const animeList: AnimeEntry[] = [
     url: 'https://myanimelist.net/anime/52211/Mashle',
   },
   {
-    title: 'Cleverness',
-    titleJp: 'クレバネス',
+    title: 'Clevatess',
+    titleJp: 'クレバテス',
     rating: 10,
     status: 'completed',
-    url: 'https://myanimelist.net/anime/59491/Cleverness',
+    url: 'https://myanimelist.net/anime/56888/Clevatess',
   },
   {
     title: 'My Hero Academia',
