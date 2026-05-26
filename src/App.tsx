@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import ScanlineOverlay from '@/components/layout/ScanlineOverlay';
 import { trackPageView } from '@/lib/analytics';
 import PixelMascot from '@/components/ui/PixelMascot';
+import EasterEggs from '@/components/ui/EasterEggs';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -58,6 +59,7 @@ export default function App() {
         </main>
         <Footer />
         <PixelMascot />
+        <EasterEggs />
       </div>
     </HelmetProvider>
   );

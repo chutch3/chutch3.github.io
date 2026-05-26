@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
+import { causeMischief as doMischief } from '@/components/ui/EasterEggs';
 
 const x = 0;
 const H = 1; // hair (cyan)
@@ -225,7 +226,8 @@ type Behavior =
   | 'glitchOut'
   | 'clicked'
   | 'transforming'
-  | 'overclocked';
+  | 'overclocked'
+  | 'mischief';
 
 interface Platform {
   y: number;
@@ -422,47 +424,52 @@ export default function PixelMascot() {
       s.behaviorsThisVisit++;
       const roll = Math.random();
       s.speed = 1.2;
-      const canExit = s.behaviorsThisVisit >= 3;
+      const canExit = s.behaviorsThisVisit >= 4;
 
-      if (roll < 0.2) {
+      if (roll < 0.15) {
         s.behavior = 'walking';
         s.direction = Math.random() < 0.5 ? -1 : 1;
-        s.timer = 50 + Math.random() * 80;
-      } else if (roll < 0.3) {
-        s.behavior = 'idle';
         s.timer = 40 + Math.random() * 60;
+      } else if (roll < 0.22) {
+        s.behavior = 'idle';
+        s.timer = 30 + Math.random() * 40;
         if (Math.random() < 0.5)
           showSpeech(
             IDLE_SPEECH[Math.floor(Math.random() * IDLE_SPEECH.length)],
           );
-      } else if (roll < 0.4) {
+      } else if (roll < 0.3) {
         s.behavior = 'waving';
-        s.timer = 45;
+        s.timer = 40;
         showSpeech('hey! ✧');
-      } else if (roll < 0.48) {
+      } else if (roll < 0.37) {
         s.behavior = 'powerup';
-        s.timer = 65;
-        showSpeech('HAAA!!', 55);
+        s.timer = 60;
+        showSpeech('HAAA!!', 50);
         setGlitchFx(true);
         setFxPos({ x: s.posX, y: s.posY });
-      } else if (roll < 0.58) {
+      } else if (roll < 0.45) {
         s.behavior = 'narutorun';
         s.direction = Math.random() < 0.5 ? -1 : 1;
-        s.timer = 40 + Math.random() * 35;
+        s.timer = 35 + Math.random() * 30;
         s.speed = 2.5;
         showSpeech(
           NARUTO_SPEECH[Math.floor(Math.random() * NARUTO_SPEECH.length)],
-          30,
+          28,
         );
-      } else if (roll < 0.66) {
+      } else if (roll < 0.52) {
         s.behavior = 'sleeping';
-        s.timer = 70 + Math.random() * 50;
-        s.sleepBubbleGrow = 0;
-      } else if (roll < 0.74) {
-        s.behavior = 'sitting';
         s.timer = 60 + Math.random() * 40;
-        if (Math.random() < 0.5) showSpeech('( ˘ω˘ )', 40);
-      } else if (roll < 0.88) {
+        s.sleepBubbleGrow = 0;
+      } else if (roll < 0.58) {
+        s.behavior = 'sitting';
+        s.timer = 50 + Math.random() * 30;
+        if (Math.random() < 0.5) showSpeech('( ˘ω˘ )', 35);
+      } else if (roll < 0.68) {
+        s.behavior = 'mischief';
+        s.timer = 50 + Math.random() * 30;
+        showSpeech('hehe ≧◡≦', 30);
+        doMischief(s.posX + sprW / 2, s.posY + sprH);
+      } else if (roll < 0.85) {
         const plats = getPlatformsForRoute();
         if (plats.length > 1) {
           const others = plats.map((_, i) => i).filter((i) => i !== s.platform);
@@ -472,7 +479,7 @@ export default function PixelMascot() {
           s.timer = 999;
         } else {
           s.behavior = 'walking';
-          s.timer = 50;
+          s.timer = 40;
         }
       } else if (canExit) {
         s.behavior = 'glitchOut';
@@ -481,7 +488,7 @@ export default function PixelMascot() {
         setFxPos({ x: s.posX, y: s.posY });
       } else {
         s.behavior = 'walking';
-        s.timer = 50 + Math.random() * 60;
+        s.timer = 40 + Math.random() * 50;
       }
     }
 
@@ -676,11 +683,12 @@ export default function PixelMascot() {
         }
       }
 
-      // Walking / fleeing / naruto
+      // Walking / fleeing / naruto / mischief wander
       if (
         s.behavior === 'walking' ||
         s.behavior === 'fleeing' ||
-        s.behavior === 'narutorun'
+        s.behavior === 'narutorun' ||
+        s.behavior === 'mischief'
       ) {
         s.posX += s.direction * s.speed;
         const left = platLeft(curPlat);
@@ -789,6 +797,9 @@ export default function PixelMascot() {
           break;
         case 'clicked':
           sprite = s.tick % 2 === 0 ? STAND : WALK_R;
+          break;
+        case 'mischief':
+          sprite = WALK_FRAMES[Math.floor(s.tick / 5) % 4];
           break;
         case 'glitchIn':
         case 'glitchOut':
