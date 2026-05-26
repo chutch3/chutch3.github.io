@@ -1,282 +1,264 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { causeMischief as doMischief } from '@/components/ui/EasterEggs';
 
-const x = 0;
-const H = 1; // hair (cyan)
+const P = 0;
+const H = 1; // hair cyan
 const K = 2; // outline
 const S = 3; // skin
 const C = 4; // clothes
 const B = 5; // clothes dark
-const A = 6; // accent (pink)
-const G = 7; // glow (cyan, for shoes/details)
+const A = 6; // accent pink
+const W = 7; // shoes
 
 const PALETTE: Record<number, string> = {
-  [x]: '',
+  [P]: '',
   [H]: '#00f5ff',
-  [K]: '#12121a',
-  [S]: '#6b6b80',
+  [K]: '#0a0a0f',
+  [S]: '#e8d0c0',
   [C]: '#1a1a2e',
-  [B]: '#0a0a0f',
+  [B]: '#12121a',
   [A]: '#ff2d7b',
-  [G]: '#00f5ff',
+  [W]: '#c8c8d0',
 };
 
-const GLOW_COLOR = 'rgba(0, 245, 255, 0.25)';
-const OC_GLOW = 'rgba(255, 45, 123, 0.35)';
+const SCALE = 3;
+const SW = 16;
+const SH = 22;
 
-const OC_PALETTE: Record<number, string> = {
-  [x]: '',
-  [H]: '#ff2d7b',
-  [K]: '#12121a',
-  [S]: '#8b7080',
-  [C]: '#2a1a2e',
-  [B]: '#0a0a0f',
-  [A]: '#f5ff00',
-  [G]: '#ff2d7b',
-};
+/* ── sprites ────────────────────────────────── */
 
-const CLICKS_TO_OVERCLOCK = 5;
-const CLICK_WINDOW = 40; // ticks (~2 seconds)
-const OVERCLOCK_DURATION = 130; // ticks (~6.5 seconds)
-
-const OC_SPEECH = [
-  '▓ SYSTEM_OVERRIDE ▓',
-  'オーバークロック',
-  'LIMIT//BREAK',
-  '>>> MAX POWER <<<',
-  '[ UNLOCKED ]',
-  'root@cyber:~#',
-];
-const SCALE = 4;
-const SPW = 16;
-const SPH = 22;
-
-/* prettier-ignore */
 const STAND = [
-  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
-  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
-  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
-  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,S,x,K,C,C,C,K,x,S,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
-  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
-  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
+  [P, P, P, P, P, H, H, H, H, H, H, P, P, P, P, P],
+  [P, P, P, P, H, H, H, H, H, H, H, H, P, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, K, S, S, S, S, S, S, S, S, K, P, P, P],
+  [P, P, P, S, S, K, S, S, S, K, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, S, S, S, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, A, S, S, S, S, S, P, P, P],
+  [P, P, P, P, K, S, S, S, S, S, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, K, C, C, C, C, C, K, P, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, S, P, K, C, C, C, K, P, S, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, P, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, P, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, B, C, P, C, B, P, P, P, P, P, P],
+  [P, P, P, P, P, K, W, P, W, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, W, P, W, K, P, P, P, P, P, P],
+  [P, P, P, P, K, K, K, P, K, K, K, P, P, P, P, P],
 ];
 
-/* prettier-ignore */
 const WALK_R = [
-  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
-  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
-  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
-  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,S,x,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,x,K,C,C,C,C,C,K,x,S,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,K,C,x,x,x,C,K,x,x,x,x,x],
-  [x,x,x,x,B,C,x,x,x,C,B,x,x,x,x,x],
-  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
-  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
-  [x,x,K,K,K,x,x,x,x,K,K,K,x,x,x,x],
-  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+  [P, P, P, P, P, H, H, H, H, H, H, P, P, P, P, P],
+  [P, P, P, P, H, H, H, H, H, H, H, H, P, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, K, S, S, S, S, S, S, S, S, K, P, P, P],
+  [P, P, P, S, S, K, S, S, S, K, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, S, S, S, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, A, S, S, S, S, S, P, P, P],
+  [P, P, P, P, K, S, S, S, S, S, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, P, P, P, P, P],
+  [P, P, S, P, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, P, K, C, C, C, C, C, K, P, S, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, K, C, P, P, P, C, K, P, P, P, P, P],
+  [P, P, P, P, B, C, P, P, P, C, B, P, P, P, P, P],
+  [P, P, P, K, W, P, P, P, P, P, W, K, P, P, P, P],
+  [P, P, P, K, W, P, P, P, P, P, W, K, P, P, P, P],
+  [P, P, K, K, K, P, P, P, P, K, K, K, P, P, P, P],
+  [P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P],
 ];
 
-/* prettier-ignore */
 const WALK_L = [
-  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
-  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
-  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
-  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,x,S,x,x,x],
-  [x,x,S,x,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,K,C,x,x,x,C,K,x,x,x,x,x],
-  [x,x,x,x,B,C,x,x,x,C,B,x,x,x,x,x],
-  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
-  [x,x,x,K,G,x,x,x,x,x,G,K,x,x,x,x],
-  [x,x,K,K,K,x,x,x,x,K,K,K,x,x,x,x],
-  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+  [P, P, P, P, P, H, H, H, H, H, H, P, P, P, P, P],
+  [P, P, P, P, H, H, H, H, H, H, H, H, P, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, K, S, S, S, S, S, S, S, S, K, P, P, P],
+  [P, P, P, S, S, K, S, S, S, K, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, S, S, S, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, A, S, S, S, S, S, P, P, P],
+  [P, P, P, P, K, S, S, S, S, S, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, P, S, P, P, P],
+  [P, P, S, P, K, C, C, C, C, C, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, K, C, P, P, P, C, K, P, P, P, P, P],
+  [P, P, P, P, B, C, P, P, P, C, B, P, P, P, P, P],
+  [P, P, P, K, W, P, P, P, P, P, W, K, P, P, P, P],
+  [P, P, P, K, W, P, P, P, P, P, W, K, P, P, P, P],
+  [P, P, K, K, K, P, P, P, P, K, K, K, P, P, P, P],
+  [P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P],
 ];
 
-/* prettier-ignore */
-const WAVE_1 = [
-  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
-  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
-  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
-  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,K,C,C,C,C,C,K,x,S,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,x,S,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
-  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
-  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
-];
-
-/* prettier-ignore */
-const WAVE_2 = [
-  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
-  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
-  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,A,S,S,S,S,S,x,x,x],
-  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,S,x,x,x],
-  [x,x,x,x,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,C,x,C,K,x,x,x,x,x,x],
-  [x,x,x,x,x,B,C,x,C,B,x,x,x,x,x,x],
-  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
-  [x,x,x,x,x,K,G,x,G,K,x,x,x,x,x,x],
-  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
-];
-
-/* prettier-ignore */
+// Sitting (for sleeping / idle on platform)
 const SIT = [
-  [x,x,x,x,x,H,H,H,H,H,H,x,x,x,x,x],
-  [x,x,x,x,H,H,H,H,H,H,H,H,x,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,H,H,H,H,H,H,H,H,H,H,x,x,x],
-  [x,x,x,K,S,S,S,S,S,S,S,S,K,x,x,x],
-  [x,x,x,S,S,K,S,S,S,K,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
-  [x,x,x,S,S,S,S,S,S,S,S,S,S,x,x,x],
-  [x,x,x,x,K,S,S,S,S,S,K,x,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,S,K,C,C,C,C,C,K,S,x,x,x,x],
-  [x,x,x,x,x,K,C,C,C,K,x,x,x,x,x,x],
-  [x,x,x,x,K,C,C,C,C,C,K,x,x,x,x,x],
-  [x,x,x,x,B,G,G,x,G,G,B,x,x,x,x,x],
-  [x,x,x,x,K,K,K,x,K,K,K,x,x,x,x,x],
-  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
-  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
-  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
-  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
-  [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+  [P, P, P, P, P, H, H, H, H, H, H, P, P, P, P, P],
+  [P, P, P, P, H, H, H, H, H, H, H, H, P, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, K, S, S, S, S, S, S, S, S, K, P, P, P],
+  [P, P, P, S, S, K, S, S, S, K, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, S, S, S, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, S, S, S, S, S, S, P, P, P],
+  [P, P, P, P, K, S, S, S, S, S, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, K, C, C, C, C, C, K, P, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, K, C, C, C, C, C, K, P, P, P, P, P],
+  [P, P, P, K, W, C, C, C, C, C, W, K, P, P, P, P],
+  [P, P, P, K, W, W, W, P, W, W, W, K, P, P, P, P],
+  [P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P],
+  [P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P],
+  [P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P],
+  [P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P],
+  [P, P, P, P, P, P, P, P, P, P, P, P, P, P, P, P],
+];
+
+const WAVE_1 = [
+  [P, P, P, P, P, H, H, H, H, H, H, P, P, P, P, P],
+  [P, P, P, P, H, H, H, H, H, H, H, H, P, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, K, S, S, S, S, S, S, S, S, K, P, P, P],
+  [P, P, P, S, S, K, S, S, S, K, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, S, S, S, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, A, S, S, S, S, S, P, P, P],
+  [P, P, P, P, K, S, S, S, S, S, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, K, C, C, C, C, C, K, P, S, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, P, S, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, P, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, P, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, B, C, P, C, B, P, P, P, P, P, P],
+  [P, P, P, P, P, K, W, P, W, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, W, P, W, K, P, P, P, P, P, P],
+  [P, P, P, P, K, K, K, P, K, K, K, P, P, P, P, P],
+];
+
+const WAVE_2 = [
+  [P, P, P, P, P, H, H, H, H, H, H, P, P, P, P, P],
+  [P, P, P, P, H, H, H, H, H, H, H, H, P, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, H, H, H, H, H, H, H, H, H, H, P, P, P],
+  [P, P, P, K, S, S, S, S, S, S, S, S, K, P, P, P],
+  [P, P, P, S, S, K, S, S, S, K, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, S, S, S, S, S, S, P, P, P],
+  [P, P, P, S, S, S, S, A, S, S, S, S, S, P, P, P],
+  [P, P, P, P, K, S, S, S, S, S, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, S, P, P, P],
+  [P, P, P, P, K, C, C, C, C, C, K, S, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, P, P, P, P, P],
+  [P, P, P, S, K, C, C, C, C, C, K, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, C, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, P, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, C, P, C, K, P, P, P, P, P, P],
+  [P, P, P, P, P, B, C, P, C, B, P, P, P, P, P, P],
+  [P, P, P, P, P, K, W, P, W, K, P, P, P, P, P, P],
+  [P, P, P, P, P, K, W, P, W, K, P, P, P, P, P, P],
+  [P, P, P, P, K, K, K, P, K, K, K, P, P, P, P, P],
 ];
 
 const WALK_FRAMES = [STAND, WALK_R, STAND, WALK_L];
-const WAVE_FRAMES = [WAVE_1, WAVE_2];
 
 type Behavior =
   | 'offscreen'
-  | 'glitchIn'
+  | 'entering'
   | 'walking'
   | 'idle'
   | 'waving'
-  | 'powerup'
-  | 'narutorun'
   | 'sleeping'
-  | 'sitting'
+  | 'powerup'
   | 'fleeing'
   | 'jumping'
-  | 'glitchOut'
-  | 'clicked'
-  | 'transforming'
-  | 'overclocked'
-  | 'mischief';
+  | 'exiting';
+
+const SPEECH = [
+  'こんにちは!',
+  '...zzZ',
+  'NANI?!',
+  '>_<',
+  '♪♪♪',
+  'sugoi~',
+  'omae wa...',
+  '✧*。',
+  'yare yare',
+  'senpai!',
+  '~nyaa',
+  'kawaii',
+  'gg',
+  'brb',
+  '*teleports*',
+];
 
 interface Platform {
-  y: number;
+  y: number; // px from bottom
   xMin: number;
   xMax: number;
 }
 
-const ROUTE_PLATFORMS: Record<string, Platform[]> = {
-  '/': [
-    { y: 20, xMin: 0, xMax: 1 },
-    { y: 200, xMin: 0.1, xMax: 0.5 },
-    { y: 350, xMin: 0.4, xMax: 0.9 },
-  ],
-  '/about': [
-    { y: 20, xMin: 0, xMax: 1 },
-    { y: 250, xMin: 0.15, xMax: 0.75 },
-  ],
-  '/resume': [
-    { y: 20, xMin: 0, xMax: 1 },
-    { y: 300, xMin: 0.05, xMax: 0.45 },
-    { y: 300, xMin: 0.55, xMax: 0.95 },
-    { y: 500, xMin: 0.2, xMax: 0.8 },
-  ],
-  '/projects': [
-    { y: 20, xMin: 0, xMax: 1 },
-    { y: 280, xMin: 0.05, xMax: 0.5 },
-    { y: 280, xMin: 0.5, xMax: 0.95 },
-  ],
-  '/anime': [
-    { y: 20, xMin: 0, xMax: 1 },
-    { y: 250, xMin: 0.05, xMax: 0.35 },
-    { y: 250, xMin: 0.35, xMax: 0.65 },
-    { y: 250, xMin: 0.65, xMax: 0.95 },
-  ],
-  '/blog': [
-    { y: 20, xMin: 0, xMax: 1 },
-    { y: 300, xMin: 0.2, xMax: 0.8 },
-  ],
-  '/privacy': [
-    { y: 20, xMin: 0, xMax: 1 },
-    { y: 280, xMin: 0.15, xMax: 0.75 },
-  ],
-};
+// Page-aware platforms that align to real page elements
+function getPagePlatforms(path: string, vh: number): Platform[] {
+  const base: Platform[] = [
+    { y: 20, xMin: 0, xMax: 1 }, // ground (footer area)
+  ];
 
-const IDLE_SPEECH = ['...zzZ', '♪♪♪', '✧*。', 'yare yare', '( ◕‿◕ )'];
-const NARUTO_SPEECH = ['ikuzo!!', 'dattebayo!'];
-const CLICK_SPEECH = ['NANI?!', 'oi!', 'やめて!', '(╯°□°)╯', 'hey!!', '!?'];
+  // Navbar is always a platform (64px from top = vh - 64 from bottom)
+  base.push({ y: vh - 68, xMin: 0, xMax: 1 });
 
-function mirrorFrame(frame: number[][]): number[][] {
+  switch (path) {
+    case '/':
+      // Hero: just ground + navbar, keep it minimal
+      break;
+    case '/about':
+    case '/privacy':
+      base.push({ y: vh * 0.4, xMin: 0.1, xMax: 0.6 });
+      base.push({ y: vh * 0.6, xMin: 0.4, xMax: 0.9 });
+      break;
+    case '/resume':
+      // Timeline dots area
+      base.push({ y: vh * 0.35, xMin: 0.05, xMax: 0.5 });
+      base.push({ y: vh * 0.55, xMin: 0.3, xMax: 0.8 });
+      base.push({ y: vh * 0.75, xMin: 0.1, xMax: 0.6 });
+      break;
+    case '/projects':
+      // Card tops
+      base.push({ y: vh * 0.45, xMin: 0.1, xMax: 0.55 });
+      base.push({ y: vh * 0.45, xMin: 0.55, xMax: 0.95 });
+      base.push({ y: vh * 0.7, xMin: 0.2, xMax: 0.8 });
+      break;
+    case '/anime':
+      base.push({ y: vh * 0.35, xMin: 0.05, xMax: 0.4 });
+      base.push({ y: vh * 0.35, xMin: 0.4, xMax: 0.7 });
+      base.push({ y: vh * 0.35, xMin: 0.7, xMax: 0.98 });
+      base.push({ y: vh * 0.6, xMin: 0.15, xMax: 0.85 });
+      break;
+    default:
+      base.push({ y: vh * 0.4, xMin: 0.1, xMax: 0.9 });
+  }
+  return base;
+}
+
+function mirror(frame: number[][]): number[][] {
   return frame.map((row) => [...row].reverse());
 }
 
@@ -285,67 +267,19 @@ export default function PixelMascot() {
   const location = useLocation();
   const [speech, setSpeech] = useState('');
   const [speechPos, setSpeechPos] = useState({ x: 0, y: 0 });
-  const [glitchFx, setGlitchFx] = useState(false);
-  const [fxPos, setFxPos] = useState({ x: 0, y: 0 });
-  const [ocAura, setOcAura] = useState(false);
-  const routeRef = useRef(location.pathname);
-  const clickRef = useRef(false);
-
-  useEffect(() => {
-    routeRef.current = location.pathname;
-  }, [location.pathname]);
+  const [showPowerFx, setShowPowerFx] = useState(false);
+  const [powerPos, setPowerPos] = useState({ x: 0, y: 0 });
 
   const drawSprite = useCallback(
-    (
-      ctx: CanvasRenderingContext2D,
-      frame: number[][],
-      flip: boolean,
-      glitch = false,
-      oc = false,
-    ) => {
-      const data = flip ? mirrorFrame(frame) : frame;
-      const cw = SPW * SCALE;
-      const ch = SPH * SCALE;
-      const pal = oc ? OC_PALETTE : PALETTE;
-      const glowCol = oc ? OC_GLOW : GLOW_COLOR;
-      const glowShadow = oc ? '#ff2d7b' : '#00f5ff';
-      ctx.clearRect(0, 0, cw, ch);
-
-      // Neon glow underlay
-      ctx.shadowColor = glowShadow;
-      ctx.shadowBlur = oc ? 12 : 6;
-      for (let row = 0; row < SPH; row++) {
-        for (let col = 0; col < SPW; col++) {
-          if (data[row][col] === x) continue;
-          ctx.fillStyle = glowCol;
-          ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
-        }
-      }
-      ctx.shadowBlur = 0;
-
-      // Glitch: offset color channels
-      if (glitch || oc) {
-        const offset = oc ? 5 : 3;
-        ctx.globalAlpha = oc ? 0.5 : 0.4;
-        for (let row = 0; row < SPH; row++) {
-          for (let col = 0; col < SPW; col++) {
-            if (data[row][col] === x) continue;
-            ctx.fillStyle = oc ? '#ff2d7b' : '#00f5ff';
-            ctx.fillRect(col * SCALE - offset, row * SCALE, SCALE, SCALE);
-            ctx.fillStyle = oc ? '#f5ff00' : '#ff2d7b';
-            ctx.fillRect(col * SCALE + offset, row * SCALE, SCALE, SCALE);
-          }
-        }
-        ctx.globalAlpha = 1;
-      }
-
-      // Main sprite with palette
-      for (let row = 0; row < SPH; row++) {
-        for (let col = 0; col < SPW; col++) {
-          const pixel = data[row][col];
-          if (pixel === x) continue;
-          ctx.fillStyle = pal[pixel];
-          ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
+    (ctx: CanvasRenderingContext2D, frame: number[][], flip: boolean) => {
+      const data = flip ? mirror(frame) : frame;
+      ctx.clearRect(0, 0, SW * SCALE, SH * SCALE);
+      for (let y = 0; y < SH; y++) {
+        for (let x = 0; x < SW; x++) {
+          const px = data[y][x];
+          if (px === P) continue;
+          ctx.fillStyle = PALETTE[px];
+          ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
         }
       }
     },
@@ -358,139 +292,30 @@ export default function PixelMascot() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const sprW = SPW * SCALE;
-    const sprH = SPH * SCALE;
+    const vh = window.innerHeight;
+    const sprW = SW * SCALE;
+    const sprH = SH * SCALE;
+    let platforms = getPagePlatforms(location.pathname, vh);
 
     const s = {
-      posX: -sprW - 50,
-      posY: 0,
-      behavior: 'offscreen' as Behavior,
-      direction: 1,
-      tick: 0,
-      timer: 100 + Math.random() * 150,
+      x: -sprW - 10,
+      y: vh - 20 - sprH,
       platform: 0,
+      behavior: 'offscreen' as Behavior,
+      direction: 1 as 1 | -1,
+      frame: 0,
+      tick: 0,
+      timer: 200 + Math.random() * 400, // stay offscreen for a while first
       speed: 1.2,
       jumpVy: 0,
-      jumpTarget: -1,
+      jumpTargetPlat: 0,
+      jumpTargetX: 0,
       mouseX: -9999,
       mouseY: -9999,
       speechTimer: 0,
       sleepBubbleGrow: 0,
       visible: false,
-      behaviorsThisVisit: 0,
-      glitchTimer: 0,
-      clickCount: 0,
-      clickDecay: 0,
-      overclocked: false,
-      ocTimer: 0,
     };
-
-    function getPlatformsForRoute(): Platform[] {
-      return ROUTE_PLATFORMS[routeRef.current] || ROUTE_PLATFORMS['/'];
-    }
-    function platLeft(p: Platform) {
-      return p.xMin * window.innerWidth;
-    }
-    function platRight(p: Platform) {
-      return p.xMax * window.innerWidth - sprW;
-    }
-    function platYPos(p: Platform) {
-      return window.innerHeight - p.y - sprH;
-    }
-
-    function showSpeech(msg: string, dur = 60) {
-      setSpeech(msg);
-      s.speechTimer = dur;
-    }
-
-    function pickEntrance() {
-      const plats = getPlatformsForRoute();
-      s.platform = Math.floor(Math.random() * plats.length);
-      const p = plats[s.platform];
-      s.direction = Math.random() < 0.5 ? 1 : -1;
-      const edge = s.direction === 1 ? platLeft(p) + 20 : platRight(p) - 20;
-      s.posX = edge;
-      s.posY = platYPos(p);
-      s.behavior = 'glitchIn';
-      s.glitchTimer = 15;
-      s.timer = 999;
-      s.visible = true;
-      s.behaviorsThisVisit = 0;
-      setGlitchFx(true);
-      setFxPos({ x: s.posX, y: s.posY });
-    }
-
-    function pickBehavior() {
-      s.behaviorsThisVisit++;
-      const roll = Math.random();
-      s.speed = 1.2;
-      const canExit = s.behaviorsThisVisit >= 4;
-
-      if (roll < 0.15) {
-        s.behavior = 'walking';
-        s.direction = Math.random() < 0.5 ? -1 : 1;
-        s.timer = 40 + Math.random() * 60;
-      } else if (roll < 0.22) {
-        s.behavior = 'idle';
-        s.timer = 30 + Math.random() * 40;
-        if (Math.random() < 0.5)
-          showSpeech(
-            IDLE_SPEECH[Math.floor(Math.random() * IDLE_SPEECH.length)],
-          );
-      } else if (roll < 0.3) {
-        s.behavior = 'waving';
-        s.timer = 40;
-        showSpeech('hey! ✧');
-      } else if (roll < 0.37) {
-        s.behavior = 'powerup';
-        s.timer = 60;
-        showSpeech('HAAA!!', 50);
-        setGlitchFx(true);
-        setFxPos({ x: s.posX, y: s.posY });
-      } else if (roll < 0.45) {
-        s.behavior = 'narutorun';
-        s.direction = Math.random() < 0.5 ? -1 : 1;
-        s.timer = 35 + Math.random() * 30;
-        s.speed = 2.5;
-        showSpeech(
-          NARUTO_SPEECH[Math.floor(Math.random() * NARUTO_SPEECH.length)],
-          28,
-        );
-      } else if (roll < 0.52) {
-        s.behavior = 'sleeping';
-        s.timer = 60 + Math.random() * 40;
-        s.sleepBubbleGrow = 0;
-      } else if (roll < 0.58) {
-        s.behavior = 'sitting';
-        s.timer = 50 + Math.random() * 30;
-        if (Math.random() < 0.5) showSpeech('( ˘ω˘ )', 35);
-      } else if (roll < 0.68) {
-        s.behavior = 'mischief';
-        s.timer = 50 + Math.random() * 30;
-        showSpeech('hehe ≧◡≦', 30);
-        doMischief(s.posX + sprW / 2, s.posY + sprH);
-      } else if (roll < 0.85) {
-        const plats = getPlatformsForRoute();
-        if (plats.length > 1) {
-          const others = plats.map((_, i) => i).filter((i) => i !== s.platform);
-          s.jumpTarget = others[Math.floor(Math.random() * others.length)];
-          s.behavior = 'jumping';
-          s.jumpVy = -8;
-          s.timer = 999;
-        } else {
-          s.behavior = 'walking';
-          s.timer = 40;
-        }
-      } else if (canExit) {
-        s.behavior = 'glitchOut';
-        s.glitchTimer = 15;
-        setGlitchFx(true);
-        setFxPos({ x: s.posX, y: s.posY });
-      } else {
-        s.behavior = 'walking';
-        s.timer = 40 + Math.random() * 50;
-      }
-    }
 
     const onMouse = (e: MouseEvent) => {
       s.mouseX = e.clientX;
@@ -498,361 +323,255 @@ export default function PixelMascot() {
     };
     window.addEventListener('mousemove', onMouse);
 
-    const onClick = () => {
-      clickRef.current = true;
+    const onResize = () => {
+      platforms = getPagePlatforms(location.pathname, window.innerHeight);
     };
-    canvas.addEventListener('click', onClick);
+    window.addEventListener('resize', onResize);
+
+    function platY(p: Platform) {
+      return window.innerHeight - p.y - sprH;
+    }
+    function platL(p: Platform) {
+      return p.xMin * window.innerWidth;
+    }
+    function platR(p: Platform) {
+      return p.xMax * window.innerWidth - sprW;
+    }
+
+    function pickEntrance() {
+      const plat = Math.floor(Math.random() * platforms.length);
+      s.platform = plat;
+      const p = platforms[plat];
+      s.direction = Math.random() < 0.5 ? 1 : -1;
+      s.x = s.direction === 1 ? platL(p) - sprW - 5 : platR(p) + sprW + 5;
+      s.y = platY(p);
+      s.behavior = 'entering';
+      s.speed = 1.2;
+      s.timer = 999;
+      s.visible = true;
+    }
 
     const loop = setInterval(() => {
       s.tick++;
+      const cw = window.innerWidth;
+      const curPlat = platforms[s.platform] || platforms[0];
 
-      // Click decay
-      if (s.clickDecay > 0) {
-        s.clickDecay--;
-        if (s.clickDecay <= 0) s.clickCount = 0;
-      }
-
-      // Handle click/tap
+      // ── cursor flee ──
       if (
-        clickRef.current &&
         s.visible &&
+        s.behavior !== 'jumping' &&
         s.behavior !== 'offscreen' &&
-        s.behavior !== 'glitchIn' &&
-        s.behavior !== 'glitchOut' &&
-        s.behavior !== 'transforming' &&
-        s.behavior !== 'overclocked'
+        s.behavior !== 'exiting'
       ) {
-        clickRef.current = false;
-        s.clickCount++;
-        s.clickDecay = CLICK_WINDOW;
-
-        if (s.clickCount >= CLICKS_TO_OVERCLOCK) {
-          s.clickCount = 0;
-          s.behavior = 'transforming';
-          s.timer = 25;
-          s.glitchTimer = 25;
-          showSpeech('...!!', 20);
-          setGlitchFx(true);
-          setFxPos({ x: s.posX, y: s.posY });
-        } else {
-          s.behavior = 'clicked';
-          s.timer = 30;
-          s.glitchTimer = 8;
-          showSpeech(
-            CLICK_SPEECH[Math.floor(Math.random() * CLICK_SPEECH.length)],
-            28,
-          );
-          setGlitchFx(true);
-          setFxPos({ x: s.posX, y: s.posY });
+        const cx = s.x + sprW / 2;
+        const cy = s.y + sprH / 2;
+        const dx = s.mouseX - cx;
+        const dy = s.mouseY - cy;
+        if (Math.sqrt(dx * dx + dy * dy) < 110) {
+          s.behavior = 'fleeing';
+          s.direction = dx > 0 ? -1 : 1;
+          s.timer = 20;
+          s.speed = 3;
         }
       }
-      clickRef.current = false;
 
-      // Offscreen
+      // ── behavior timer ──
+      if (
+        s.behavior !== 'jumping' &&
+        s.behavior !== 'offscreen' &&
+        s.behavior !== 'entering' &&
+        s.behavior !== 'exiting'
+      ) {
+        s.timer--;
+        if (s.timer <= 0) {
+          s.speed = 1.2;
+          const roll = Math.random();
+          if (roll < 0.18) {
+            // Exit screen
+            s.behavior = 'exiting';
+            s.direction = Math.random() < 0.5 ? -1 : 1;
+            s.timer = 999;
+            s.speed = 1.5;
+          } else if (roll < 0.38) {
+            s.behavior = 'idle';
+            s.timer = 60 + Math.random() * 100;
+            if (Math.random() < 0.35) {
+              setSpeech(SPEECH[Math.floor(Math.random() * SPEECH.length)]);
+              s.speechTimer = 60;
+            }
+          } else if (roll < 0.62) {
+            s.behavior = 'walking';
+            s.direction = Math.random() < 0.5 ? -1 : 1;
+            s.timer = 60 + Math.random() * 120;
+          } else if (roll < 0.72) {
+            s.behavior = 'waving';
+            s.timer = 50;
+            setSpeech('hey! ✧');
+            s.speechTimer = 45;
+          } else if (roll < 0.8) {
+            s.behavior = 'sleeping';
+            s.timer = 100 + Math.random() * 80;
+            s.sleepBubbleGrow = 0;
+          } else if (roll < 0.87) {
+            s.behavior = 'powerup';
+            s.timer = 70;
+            setSpeech('HAAA!!');
+            s.speechTimer = 60;
+            setShowPowerFx(true);
+            setPowerPos({ x: s.x, y: s.y });
+          } else if (platforms.length > 1) {
+            const others = platforms
+              .map((_, i) => i)
+              .filter((i) => i !== s.platform);
+            const target = others[Math.floor(Math.random() * others.length)];
+            s.behavior = 'jumping';
+            s.jumpTargetPlat = target;
+            s.jumpTargetX =
+              platL(platforms[target]) +
+              (platR(platforms[target]) - platL(platforms[target])) *
+                (0.2 + Math.random() * 0.6);
+            s.jumpVy = -9;
+          } else {
+            s.behavior = 'walking';
+            s.direction = Math.random() < 0.5 ? -1 : 1;
+            s.timer = 80;
+          }
+        }
+      }
+
+      // ── offscreen: wait then enter ──
       if (s.behavior === 'offscreen') {
         s.timer--;
-        canvas.style.opacity = '0';
+        s.visible = false;
         if (s.timer <= 0) pickEntrance();
+        // clear canvas while offscreen
+        ctx.clearRect(0, 0, SW * SCALE, SH * SCALE);
+        canvas.style.transform = 'translate(-200px, -200px)';
         return;
       }
 
-      canvas.style.opacity = '1';
-      const plats = getPlatformsForRoute();
-      const curPlat = plats[s.platform] || plats[0];
-
-      // Glitch entrance
-      if (s.behavior === 'glitchIn') {
-        s.glitchTimer--;
-        if (s.glitchTimer <= 0) {
-          setGlitchFx(false);
-          s.behavior = 'idle';
-          s.timer = 30 + Math.random() * 40;
+      // ── entering: walk onto platform ──
+      if (s.behavior === 'entering') {
+        s.x += s.direction * s.speed;
+        const l = platL(curPlat);
+        const r = platR(curPlat);
+        if (s.x >= l && s.x <= r) {
+          s.behavior = 'walking';
+          s.timer = 60 + Math.random() * 100;
         }
       }
 
-      // Glitch exit
-      if (s.behavior === 'glitchOut') {
-        s.glitchTimer--;
-        if (s.glitchTimer <= 0) {
-          setGlitchFx(false);
+      // ── exiting: walk off platform ──
+      if (s.behavior === 'exiting') {
+        s.x += s.direction * s.speed;
+        if (s.x < -sprW - 20 || s.x > cw + 20) {
           s.behavior = 'offscreen';
-          s.timer = 150 + Math.random() * 250;
+          s.timer = 300 + Math.random() * 600; // 15-45 seconds offscreen
           s.visible = false;
+          return;
         }
       }
 
-      // Click reaction: small jump + glitch
-      if (s.behavior === 'clicked') {
-        s.timer--;
-        if (s.timer > 20) {
-          s.posY -= 2;
-        } else if (s.timer > 10) {
-          s.posY += 2;
-        }
-        s.glitchTimer = Math.max(0, s.glitchTimer - 1);
-        if (s.glitchTimer <= 0) setGlitchFx(false);
-        if (s.timer <= 0) {
-          s.posY = platYPos(curPlat);
-          s.behavior = 'fleeing';
-          s.direction = Math.random() < 0.5 ? -1 : 1;
-          s.timer = 25;
-          s.speed = 2.5;
-        }
-      }
-
-      // Transformation sequence
-      if (s.behavior === 'transforming') {
-        s.timer--;
-        s.posY += s.tick % 2 === 0 ? -1 : 1;
-        if (s.timer <= 0) {
-          s.behavior = 'overclocked';
-          s.overclocked = true;
-          s.ocTimer = OVERCLOCK_DURATION;
-          s.posY = platYPos(curPlat);
-          showSpeech(
-            OC_SPEECH[Math.floor(Math.random() * OC_SPEECH.length)],
-            60,
-          );
-          setOcAura(true);
-          setFxPos({ x: s.posX, y: s.posY });
-        }
-      }
-
-      // Overclocked mode — erratic fast movement
-      if (s.behavior === 'overclocked') {
-        s.ocTimer--;
-        setFxPos({ x: s.posX, y: s.posY });
-
-        // Erratic speed changes
-        s.speed = 2.5 + Math.sin(s.tick * 0.3) * 1.5;
-        s.posX += s.direction * s.speed;
-
-        // Reverse at platform edges
-        const left = platLeft(curPlat);
-        const right = platRight(curPlat);
-        if (s.posX <= left) {
-          s.posX = left;
+      // ── movement ──
+      if (s.behavior === 'walking' || s.behavior === 'fleeing') {
+        s.x += s.direction * s.speed;
+        const l = platL(curPlat);
+        const r = platR(curPlat);
+        if (s.x <= l) {
+          s.x = l;
           s.direction = 1;
         }
-        if (s.posX >= right) {
-          s.posX = right;
-          s.direction = -1;
-        }
-
-        // Random direction changes
-        if (Math.random() < 0.05) s.direction *= -1;
-
-        // Random speech
-        if (s.ocTimer === 80 || s.ocTimer === 40) {
-          showSpeech(
-            OC_SPEECH[Math.floor(Math.random() * OC_SPEECH.length)],
-            30,
-          );
-        }
-
-        // Power down
-        if (s.ocTimer <= 0) {
-          s.overclocked = false;
-          s.behavior = 'idle';
-          s.timer = 40;
-          s.speed = 1.2;
-          setOcAura(false);
-          setGlitchFx(false);
-          showSpeech('...rebooting', 40);
-        }
-      }
-
-      // Cursor flee
-      if (
-        s.behavior !== 'jumping' &&
-        s.behavior !== 'glitchOut' &&
-        s.behavior !== 'glitchIn' &&
-        s.behavior !== 'clicked' &&
-        s.behavior !== 'transforming' &&
-        s.behavior !== 'overclocked'
-      ) {
-        const cx = s.posX + sprW / 2;
-        const cy = s.posY + sprH / 2;
-        const dx = s.mouseX - cx;
-        const dy = s.mouseY - cy;
-        if (Math.sqrt(dx * dx + dy * dy) < 120) {
-          s.behavior = 'fleeing';
-          s.direction = dx > 0 ? -1 : 1;
-          s.timer = 25;
-          s.speed = 2.5;
-        }
-      }
-
-      // Walking / fleeing / naruto / mischief wander
-      if (
-        s.behavior === 'walking' ||
-        s.behavior === 'fleeing' ||
-        s.behavior === 'narutorun' ||
-        s.behavior === 'mischief'
-      ) {
-        s.posX += s.direction * s.speed;
-        const left = platLeft(curPlat);
-        const right = platRight(curPlat);
-        if (s.posX <= left) {
-          s.posX = left;
-          s.direction = 1;
-        }
-        if (s.posX >= right) {
-          s.posX = right;
+        if (s.x >= r) {
+          s.x = r;
           s.direction = -1;
         }
       }
 
-      // Jump physics
+      // ── jump physics ──
       if (s.behavior === 'jumping') {
-        const targetPlat = plats[s.jumpTarget] || plats[0];
-        const targetY = platYPos(targetPlat);
-        const targetX =
-          platLeft(targetPlat) +
-          (platRight(targetPlat) - platLeft(targetPlat)) * 0.5;
-        s.jumpVy += 0.35;
-        s.posY += s.jumpVy;
-        s.posX += (targetX - s.posX) * 0.04;
-        s.direction = targetX > s.posX ? 1 : -1;
-        if (s.jumpVy > 0 && s.posY >= targetY) {
-          s.posY = targetY;
-          s.platform = s.jumpTarget;
+        const tp = platforms[s.jumpTargetPlat];
+        const ty = platY(tp);
+        s.jumpVy += 0.4;
+        s.y += s.jumpVy;
+        const dxj = s.jumpTargetX - s.x;
+        s.x += dxj * 0.05;
+        s.direction = dxj > 0 ? 1 : -1;
+        if (s.jumpVy > 0 && s.y >= ty) {
+          s.y = ty;
+          s.platform = s.jumpTargetPlat;
           s.behavior = 'idle';
-          s.timer = 20 + Math.random() * 30;
+          s.timer = 20 + Math.random() * 40;
           s.jumpVy = 0;
         }
       }
 
-      // Sleeping bubble
+      // ── sleeping bubble ──
       if (s.behavior === 'sleeping') {
-        s.sleepBubbleGrow = Math.min(s.sleepBubbleGrow + 0.02, 1);
-        if (s.tick % 40 === 0) {
-          const dots = '.'.repeat(1 + Math.floor(s.sleepBubbleGrow * 3));
+        s.sleepBubbleGrow++;
+        if (s.sleepBubbleGrow % 40 === 1) {
+          const dots = '.'.repeat(
+            Math.min(Math.floor(s.sleepBubbleGrow / 40) + 1, 3),
+          );
           setSpeech(`zzZ${dots}`);
-          s.speechTimer = 38;
+          s.speechTimer = 35;
         }
       }
 
-      // Timer for behavior-driven states
-      if (
-        s.behavior !== 'offscreen' &&
-        s.behavior !== 'glitchIn' &&
-        s.behavior !== 'glitchOut' &&
-        s.behavior !== 'jumping' &&
-        s.behavior !== 'clicked' &&
-        s.behavior !== 'transforming' &&
-        s.behavior !== 'overclocked'
-      ) {
-        s.timer--;
-        if (s.timer <= 0) pickBehavior();
-      }
-
-      // Speech pos
+      // ── speech ──
       if (s.speechTimer > 0) {
         s.speechTimer--;
-        setSpeechPos({ x: s.posX + sprW / 2, y: s.posY - 8 });
+        setSpeechPos({ x: s.x + sprW / 2, y: s.y - 8 });
         if (s.speechTimer <= 0) {
           setSpeech('');
+          setShowPowerFx(false);
         }
       }
 
-      // Power-up glitch effect timing
-      if (s.behavior === 'powerup') {
-        if (s.timer < 50) {
-          setGlitchFx(false);
-        }
-        setFxPos({ x: s.posX, y: s.posY });
-      }
-
-      // Sprite selection
+      // ── render ──
       let sprite: number[][];
       const flip = s.direction === -1;
-      const isGlitching =
-        s.behavior === 'glitchIn' ||
-        s.behavior === 'glitchOut' ||
-        s.behavior === 'powerup' ||
-        s.behavior === 'transforming' ||
-        (s.behavior === 'clicked' && s.glitchTimer > 0);
 
       switch (s.behavior) {
         case 'walking':
+        case 'fleeing':
+        case 'entering':
+        case 'exiting':
           sprite = WALK_FRAMES[Math.floor(s.tick / 6) % 4];
           break;
-        case 'fleeing':
-        case 'narutorun':
-          sprite = WALK_FRAMES[Math.floor(s.tick / 4) % 4];
-          break;
         case 'waving':
-          sprite = WAVE_FRAMES[Math.floor(s.tick / 8) % 2];
+          sprite = s.tick % 16 < 8 ? WAVE_1 : WAVE_2;
           break;
         case 'jumping':
           sprite = s.jumpVy < 0 ? WALK_R : WALK_L;
           break;
-        case 'powerup':
-          sprite = s.tick % 4 < 2 ? STAND : WALK_R;
-          break;
         case 'sleeping':
-        case 'sitting':
           sprite = SIT;
           break;
-        case 'clicked':
-          sprite = s.tick % 2 === 0 ? STAND : WALK_R;
-          break;
-        case 'mischief':
-          sprite = WALK_FRAMES[Math.floor(s.tick / 5) % 4];
-          break;
-        case 'glitchIn':
-        case 'glitchOut':
-          sprite =
-            s.glitchTimer % 3 === 0
-              ? STAND
-              : s.glitchTimer % 3 === 1
-                ? WALK_R
-                : WALK_L;
-          break;
-        case 'transforming':
-          sprite = s.tick % 2 === 0 ? STAND : WALK_R;
-          break;
-        case 'overclocked':
-          sprite = WALK_FRAMES[Math.floor(s.tick / 3) % 4];
+        case 'powerup':
+          sprite = s.tick % 4 < 2 ? STAND : WALK_R;
           break;
         default:
           sprite = STAND;
       }
 
-      // Flicker opacity during glitch entrance/exit
-      if (s.behavior === 'glitchIn' || s.behavior === 'glitchOut') {
-        canvas.style.opacity = s.tick % 2 === 0 ? '1' : '0.3';
-      }
-      // Transformation flicker between normal and OC palette
-      if (s.behavior === 'transforming') {
-        canvas.style.opacity = s.tick % 3 === 0 ? '0.4' : '1';
-      }
-
-      canvas.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY)}px)`;
-      drawSprite(
-        ctx,
-        sprite,
-        flip,
-        isGlitching,
-        s.overclocked || (s.behavior === 'transforming' && s.timer < 15),
-      );
+      canvas.style.transform = `translate(${Math.round(s.x)}px, ${Math.round(s.y)}px)`;
+      drawSprite(ctx, sprite, flip);
     }, 1000 / 20);
 
     return () => {
       clearInterval(loop);
       window.removeEventListener('mousemove', onMouse);
-      canvas.removeEventListener('click', onClick);
+      window.removeEventListener('resize', onResize);
     };
-  }, [drawSprite]);
+  }, [drawSprite, location.pathname]);
 
   return (
     <>
       <canvas
         ref={canvasRef}
-        width={SPW * SCALE}
-        height={SPH * SCALE}
-        className="fixed top-0 left-0 z-40 cursor-pointer opacity-0 transition-opacity duration-300"
+        width={SW * SCALE}
+        height={SH * SCALE}
+        className="fixed top-0 left-0 z-40 pointer-events-none"
         style={{ imageRendering: 'pixelated' }}
       />
       {speech && (
@@ -864,59 +583,23 @@ export default function PixelMascot() {
             transform: 'translate(-50%, -100%)',
           }}
         >
-          <div className="animated-border rounded px-2 py-1">
-            <div className="text-[10px] font-mono text-cyber-cyan whitespace-nowrap">
-              {speech}
-            </div>
+          <div className="bg-cyber-surface border border-cyber-cyan/30 rounded px-2 py-1 text-[10px] font-mono text-cyber-cyan whitespace-nowrap shadow-[0_0_10px_rgba(0,245,255,0.1)]">
+            {speech}
+            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-cyber-cyan/30" />
           </div>
         </div>
       )}
-      {glitchFx && !ocAura && (
+      {showPowerFx && (
         <div
           className="fixed z-30 pointer-events-none"
           style={{
-            left: fxPos.x - 10,
-            top: fxPos.y - 10,
-            width: SPW * SCALE + 20,
-            height: SPH * SCALE + 20,
+            left: powerPos.x - 15,
+            top: powerPos.y - 15,
+            width: SW * SCALE + 30,
+            height: SH * SCALE + 30,
           }}
         >
-          <div
-            className="w-full h-full"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(0,245,255,0.15) 0%, transparent 70%)',
-              animation: 'glow-pulse 0.3s ease-in-out infinite alternate',
-            }}
-          />
-        </div>
-      )}
-      {ocAura && (
-        <div
-          className="fixed z-30 pointer-events-none"
-          style={{
-            left: fxPos.x - 20,
-            top: fxPos.y - 25,
-            width: SPW * SCALE + 40,
-            height: SPH * SCALE + 50,
-          }}
-        >
-          <div
-            className="w-full h-full rounded-full animate-pulse"
-            style={{
-              background:
-                'radial-gradient(ellipse, rgba(255,45,123,0.2) 0%, rgba(245,255,0,0.05) 50%, transparent 70%)',
-            }}
-          />
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background:
-                'radial-gradient(ellipse, rgba(255,45,123,0.1) 0%, transparent 60%)',
-              animation: 'glow-pulse 0.2s ease-in-out infinite alternate',
-              transform: 'scale(1.3)',
-            }}
-          />
+          <div className="w-full h-full rounded-full bg-cyber-yellow/10 animate-ping" />
         </div>
       )}
     </>
