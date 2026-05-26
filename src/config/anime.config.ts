@@ -264,7 +264,8 @@ export const animeList: AnimeEntry[] = [
   {
     title: 'Vinland Saga',
     titleJp: 'ヴィンランド・サガ',
-    status: 'plan-to-watch',
+    rating: 8,
+    status: 'completed',
     url: 'https://myanimelist.net/anime/37521/Vinland_Saga',
   },
   {
