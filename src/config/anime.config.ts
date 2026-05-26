@@ -87,6 +87,13 @@ export const animeList: AnimeEntry[] = [
     url: 'https://myanimelist.net/anime/30276/One_Punch_Man',
   },
   {
+    title: 'Undead Unluck',
+    titleJp: 'アンデッドアンラック',
+    rating: 5,
+    status: 'watching',
+    url: 'https://myanimelist.net/anime/54573/Undead_Unluck',
+  },
+  {
     title: 'Ergo Proxy',
     titleJp: 'エルゴプラクシー',
     status: 'watching',
@@ -235,9 +242,17 @@ export const animeList: AnimeEntry[] = [
     url: 'https://myanimelist.net/anime/267/Gungrave',
   },
   {
+    title: 'Parasyte: The Maxim',
+    titleJp: '寄生獣 セイの格率',
+    rating: 10,
+    status: 'completed',
+    url: 'https://myanimelist.net/anime/22535/Kiseijuu__Sei_no_Kakuritsu',
+  },
+  {
     title: 'The Promised Neverland',
     titleJp: '約束のネバーランド',
-    status: 'plan-to-watch',
+    rating: 10,
+    status: 'completed',
     url: 'https://myanimelist.net/anime/37779/Yakusoku_no_Neverland',
   },
   {
