@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import SectionHeading from '@/components/ui/SectionHeading';
 import NeonCard from '@/components/ui/NeonCard';
 import AnimeBadge from '@/components/ui/AnimeBadge';
@@ -24,6 +24,18 @@ function StarRating({ rating }: { rating: number }) {
     </div>
   );
 }
+
+const container = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, scale: 0.95 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.3 } },
+};
 
 export default function AnimeWatchlist() {
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
@@ -58,67 +70,61 @@ export default function AnimeWatchlist() {
           ))}
         </div>
 
-        {/* Anime grid */}
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((anime, i) => (
-              <motion.div
-                key={anime.title}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  transition: { duration: 0.3, delay: i * 0.08 },
-                }}
-                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-              >
-                <NeonCard className="h-full">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-body font-semibold text-cyber-text text-sm">
-                          {anime.url ? (
-                            <a
-                              href={anime.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="hover:text-cyber-cyan transition-colors"
-                            >
-                              {anime.title}
-                            </a>
-                          ) : (
-                            anime.title
-                          )}
-                        </h3>
-                        {anime.titleJp && (
-                          <p className="font-jp text-xs text-cyber-muted mt-0.5">
-                            {anime.titleJp}
-                          </p>
+        {/* Anime grid — keyed on filter to re-trigger stagger */}
+        <motion.div
+          key={activeFilter}
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+        >
+          {filtered.map((anime) => (
+            <motion.div key={anime.title} variants={item}>
+              <NeonCard className="h-full">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-body font-semibold text-cyber-text text-sm">
+                        {anime.url ? (
+                          <a
+                            href={anime.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hover:text-cyber-cyan transition-colors"
+                          >
+                            {anime.title}
+                          </a>
+                        ) : (
+                          anime.title
                         )}
-                      </div>
-                      <AnimeBadge status={anime.status} />
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-cyber-muted">
-                      {anime.episodes && (
-                        <span className="font-mono">
-                          {anime.episodes} eps
-                        </span>
+                      </h3>
+                      {anime.titleJp && (
+                        <p className="font-jp text-xs text-cyber-muted mt-0.5">
+                          {anime.titleJp}
+                        </p>
                       )}
-                      {anime.rating && <StarRating rating={anime.rating} />}
                     </div>
-
-                    {anime.notes && (
-                      <p className="text-xs text-cyber-text/50 italic">
-                        {anime.notes}
-                      </p>
-                    )}
+                    <AnimeBadge status={anime.status} />
                   </div>
-                </NeonCard>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+
+                  <div className="flex items-center justify-between text-xs text-cyber-muted">
+                    {anime.episodes && (
+                      <span className="font-mono">
+                        {anime.episodes} eps
+                      </span>
+                    )}
+                    {anime.rating && <StarRating rating={anime.rating} />}
+                  </div>
+
+                  {anime.notes && (
+                    <p className="text-xs text-cyber-text/50 italic">
+                      {anime.notes}
+                    </p>
+                  )}
+                </div>
+              </NeonCard>
+            </motion.div>
+          ))}
         </motion.div>
 
         {filtered.length === 0 && (

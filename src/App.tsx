@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HelmetProvider } from 'react-helmet-async';
 import Navbar from '@/components/layout/Navbar';
@@ -16,10 +16,19 @@ const pageVariants = {
   },
   exit: {
     opacity: 0,
-    y: -10,
-    transition: { duration: 0.2 },
+    transition: { duration: 0.15 },
   },
 };
+
+function FrozenOutlet() {
+  const outlet = useOutlet();
+  const frozenRef = useRef(outlet);
+  // Update ref only when we get a new non-null outlet (i.e. on mount, not during exit)
+  if (outlet) {
+    frozenRef.current = outlet;
+  }
+  return frozenRef.current;
+}
 
 export default function App() {
   const location = useLocation();
@@ -42,7 +51,7 @@ export default function App() {
               animate="animate"
               exit="exit"
             >
-              <Outlet />
+              <FrozenOutlet />
             </motion.div>
           </AnimatePresence>
         </main>
