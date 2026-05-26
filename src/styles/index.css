@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cyber-bg text-cyber-text font-body antialiased;
+  }
+
+  ::selection {
+    @apply bg-cyber-cyan/30 text-white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-cyber-bg;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-cyber-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-cyber-muted;
+  }
+}
+
+@layer utilities {
+  .neon-cyan {
+    text-shadow: 0 0 7px #00f5ff, 0 0 10px #00f5ff, 0 0 21px #00f5ff;
+  }
+
+  .neon-pink {
+    text-shadow: 0 0 7px #ff2d7b, 0 0 10px #ff2d7b, 0 0 21px #ff2d7b;
+  }
+
+  .neon-yellow {
+    text-shadow: 0 0 7px #f5ff00, 0 0 10px #f5ff00, 0 0 21px #f5ff00;
+  }
+
+  .neon-border-cyan {
+    box-shadow: 0 0 5px #00f5ff, inset 0 0 5px rgba(0, 245, 255, 0.1);
+    border-color: #00f5ff;
+  }
+
+  .neon-border-pink {
+    box-shadow: 0 0 5px #ff2d7b, inset 0 0 5px rgba(255, 45, 123, 0.1);
+    border-color: #ff2d7b;
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+}
