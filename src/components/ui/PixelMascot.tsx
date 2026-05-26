@@ -20,7 +20,7 @@ const PALETTE: Record<number, string> = {
   [Y]: '#f5ff00',
 };
 
-const SCALE = 3;
+const SCALE = 4;
 const W = 14;
 const HT = 18;
 
@@ -174,15 +174,13 @@ function mirrorFrame(frame: number[][]): number[][] {
 export default function PixelMascot() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef({
-    x:
-      Math.random() *
-      (typeof window !== 'undefined' ? window.innerWidth - 100 : 500),
+    x: 100 + Math.random() * 300,
     y: 0,
-    behavior: 'idle' as BehaviorState,
+    behavior: 'walking' as BehaviorState,
     frame: 0,
     tick: 0,
     direction: 1,
-    behaviorTimer: 0,
+    behaviorTimer: 60 + Math.random() * 60,
     speechBubble: '',
     speechTimer: 0,
     powerupFrame: 0,
@@ -382,7 +380,7 @@ export default function PixelMascot() {
         ref={canvasRef}
         width={W * SCALE}
         height={HT * SCALE}
-        className="fixed bottom-0 left-0 z-40 pointer-events-none"
+        className="fixed top-0 left-0 z-40 pointer-events-none"
         style={{ imageRendering: 'pixelated' }}
       />
       {speech && (
