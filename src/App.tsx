@@ -6,6 +6,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ScanlineOverlay from '@/components/layout/ScanlineOverlay';
 import { trackPageView } from '@/lib/analytics';
+import PixelMascot from '@/components/ui/PixelMascot';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -56,6 +57,7 @@ export default function App() {
           </AnimatePresence>
         </main>
         <Footer />
+        <PixelMascot />
       </div>
     </HelmetProvider>
   );
