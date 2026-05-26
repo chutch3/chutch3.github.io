@@ -4,6 +4,7 @@ import SectionHeading from '@/components/ui/SectionHeading';
 import NeonCard from '@/components/ui/NeonCard';
 import AnimeBadge from '@/components/ui/AnimeBadge';
 import { animeList } from '@/config/anime.config';
+import { trackEvent } from '@/lib/analytics';
 import type { WatchStatus } from '@/types';
 
 type FilterOption = 'all' | WatchStatus;
@@ -33,7 +34,7 @@ export default function AnimeWatchlist() {
       : animeList.filter((a) => a.status === activeFilter);
 
   return (
-    <section className="py-24 px-6">
+    <section className="py-24 px-6 glow-purple noise-bg">
       <div className="max-w-4xl mx-auto">
         <SectionHeading title="Watchlist" jpTitle="アニメリスト" />
 
@@ -42,7 +43,10 @@ export default function AnimeWatchlist() {
           {filters.map(({ key, label }) => (
             <button
               key={key}
-              onClick={() => setActiveFilter(key)}
+              onClick={() => {
+                setActiveFilter(key);
+                trackEvent(`anime-filter-${key}`, label);
+              }}
               className={`px-4 py-2 text-xs font-heading uppercase tracking-widest border transition-all duration-300 ${
                 activeFilter === key
                   ? 'border-cyber-cyan text-cyber-cyan bg-cyber-cyan/5 shadow-[0_0_10px_rgba(0,245,255,0.15)]'
@@ -57,14 +61,17 @@ export default function AnimeWatchlist() {
         {/* Anime grid */}
         <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence mode="popLayout">
-            {filtered.map((anime) => (
+            {filtered.map((anime, i) => (
               <motion.div
                 key={anime.title}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  transition: { duration: 0.3, delay: i * 0.08 },
+                }}
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
               >
                 <NeonCard className="h-full">
                   <div className="flex flex-col gap-3">

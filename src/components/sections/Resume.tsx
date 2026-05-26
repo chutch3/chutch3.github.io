@@ -5,6 +5,7 @@ import NeonButton from '@/components/ui/NeonButton';
 import SkillBadge from '@/components/ui/SkillBadge';
 import { siteConfig } from '@/config/site.config';
 import { trackEvent } from '@/lib/analytics';
+import { useScrollReveal } from '@/hooks/useScrollReveal';
 import type { CompanyStage } from '@/types';
 
 const skillCategories = [
@@ -26,8 +27,11 @@ const stageStyles: Record<CompanyStage, string> = {
 };
 
 export default function Resume() {
+  const { ref: eduRef, isVisible: eduVisible } = useScrollReveal();
+  const { ref: skillsRef, isVisible: skillsVisible } = useScrollReveal();
+
   return (
-    <section className="py-24 px-6">
+    <section className="py-24 px-6 glow-cyan noise-bg">
       <div className="max-w-4xl mx-auto">
         <SectionHeading title="Resume" jpTitle="履歴書" />
 
@@ -60,7 +64,7 @@ export default function Resume() {
                 key={`${exp.company}-${exp.from}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
+                transition={{ duration: 0.4, delay: 0.2 + i * 0.12 }}
                 className="relative mb-10 last:mb-0"
               >
                 {/* Timeline dot */}
@@ -102,18 +106,20 @@ export default function Resume() {
         </div>
 
         {/* Education */}
-        <div className="mb-16">
+        <div ref={eduRef} className="mb-16">
           <h3 className="font-heading text-lg text-cyber-text uppercase tracking-wider mb-8">
             Education
           </h3>
           <div className="space-y-6">
             {siteConfig.educations.map((edu, i) => (
-              <motion.div
+              <div
                 key={edu.institution}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="border-l-2 border-cyber-pink/50 pl-6"
+                className={`border-l-2 border-cyber-pink/50 pl-6 transition-all duration-700 ${
+                  eduVisible
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 -translate-x-4'
+                }`}
+                style={{ transitionDelay: eduVisible ? `${i * 150}ms` : '0ms' }}
               >
                 <h4 className="font-body font-semibold text-cyber-text">
                   {edu.institution}
@@ -122,22 +128,30 @@ export default function Resume() {
                 <p className="font-mono text-xs text-cyber-muted mt-1">
                   {edu.from} — {edu.to}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
 
         {/* Skills Grid */}
-        <div>
+        <div ref={skillsRef}>
           <h3 className="font-heading text-lg text-cyber-text uppercase tracking-wider mb-8">
             Skills
           </h3>
           <div className="space-y-6">
-            {skillCategories.map(({ key, label }) => {
+            {skillCategories.map(({ key, label }, catIndex) => {
               const skills = siteConfig.skills.filter((s) => s.category === key);
               if (skills.length === 0) return null;
               return (
-                <div key={key}>
+                <div
+                  key={key}
+                  className={`transition-all duration-700 ${
+                    skillsVisible
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 translate-y-4'
+                  }`}
+                  style={{ transitionDelay: skillsVisible ? `${catIndex * 100}ms` : '0ms' }}
+                >
                   <p className="font-mono text-xs text-cyber-muted mb-3 uppercase tracking-wider">
                     {label}
                   </p>

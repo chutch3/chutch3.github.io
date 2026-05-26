@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion';
 import SectionHeading from '@/components/ui/SectionHeading';
+import { useScrollReveal } from '@/hooks/useScrollReveal';
 
 export default function About() {
+  const { ref: interestsRef, isVisible: interestsVisible } = useScrollReveal();
+
   return (
-    <section className="py-24 px-6">
+    <section className="py-24 px-6 glow-cyan noise-bg">
       <div className="max-w-3xl mx-auto">
         <SectionHeading title="About" jpTitle="自己紹介" />
 
@@ -45,7 +48,10 @@ export default function About() {
             and watch a probably unhealthy amount of anime.
           </p>
 
-          <div className="pt-4 border-t border-cyber-border">
+          <div
+            ref={interestsRef}
+            className={`pt-4 border-t border-cyber-border transition-all duration-700 ${interestsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+          >
             <p className="font-mono text-xs text-cyber-muted">
               <span className="text-cyber-cyan">$</span> cat /etc/interests
             </p>

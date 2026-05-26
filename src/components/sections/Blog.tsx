@@ -3,7 +3,7 @@ import SectionHeading from '@/components/ui/SectionHeading';
 
 export default function Blog() {
   return (
-    <section className="py-24 px-6">
+    <section className="py-24 px-6 glow-cyan noise-bg">
       <div className="max-w-4xl mx-auto">
         <SectionHeading title="Blog" jpTitle="ブログ" />
 
