@@ -1,5 +1,6 @@
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
 import { siteConfig } from '@/config/site.config';
+import { trackEvent } from '@/lib/analytics';
 
 const socialLinks = [
   {
@@ -34,6 +35,7 @@ export default function Footer() {
               target="_blank"
               rel="noreferrer"
               aria-label={label}
+              onClick={() => trackEvent(`social-${label.toLowerCase()}`, label)}
               className="text-cyber-muted hover:text-cyber-cyan transition-colors duration-300"
             >
               <Icon size={16} />

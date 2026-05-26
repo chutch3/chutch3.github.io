@@ -4,6 +4,8 @@ import SectionHeading from '@/components/ui/SectionHeading';
 import NeonButton from '@/components/ui/NeonButton';
 import SkillBadge from '@/components/ui/SkillBadge';
 import { siteConfig } from '@/config/site.config';
+import { trackEvent } from '@/lib/analytics';
+import type { CompanyStage } from '@/types';
 
 const skillCategories = [
   { key: 'core', label: 'ML / AI' },
@@ -13,6 +15,15 @@ const skillCategories = [
   { key: 'frameworks', label: 'Frameworks' },
   { key: 'tools', label: 'Tools' },
 ] as const;
+
+const stageStyles: Record<CompanyStage, string> = {
+  'Series A': 'border-cyber-cyan/40 text-cyber-cyan/70',
+  'Series B': 'border-cyber-cyan/40 text-cyber-cyan/70',
+  'Unicorn': 'border-cyber-yellow/40 text-cyber-yellow/70',
+  'Acquired': 'border-cyber-purple/40 text-cyber-purple/70',
+  'Fortune 50': 'border-cyber-pink/40 text-cyber-pink/70',
+  'Public': 'border-cyber-pink/40 text-cyber-pink/70',
+};
 
 export default function Resume() {
   return (
@@ -27,7 +38,12 @@ export default function Resume() {
           transition={{ duration: 0.5 }}
           className="mb-16"
         >
-          <NeonButton href={siteConfig.resume.url} variant="cyan" external>
+          <NeonButton
+            href={siteConfig.resume.url}
+            variant="cyan"
+            external
+            onClick={() => trackEvent('view-resume', 'View Full Resume')}
+          >
             <HiExternalLink size={16} />
             View Full Resume
           </NeonButton>
@@ -58,14 +74,23 @@ export default function Resume() {
                     {exp.from} — {exp.to}
                   </span>
                 </div>
-                <a
-                  href={exp.companyLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-mono text-sm text-cyber-pink hover:neon-pink transition-all"
-                >
-                  {exp.company}
-                </a>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <a
+                    href={exp.companyLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-mono text-sm text-cyber-pink hover:neon-pink transition-all"
+                  >
+                    {exp.company}
+                  </a>
+                  {exp.stage && (
+                    <span
+                      className={`inline-block px-1.5 py-0.5 text-[10px] font-heading uppercase tracking-wider border rounded-sm ${stageStyles[exp.stage]}`}
+                    >
+                      {exp.stage}
+                    </span>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>

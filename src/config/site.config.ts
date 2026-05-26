@@ -50,6 +50,9 @@ export const siteConfig = {
     { name: 'Pytest', category: 'tools' },
     { name: 'Ansible', category: 'tools' },
   ] satisfies Skill[],
+  goatcounter: {
+    siteCode: 'chutch3-portfolio',
+  },
   experiences: [
     {
       company: 'SmarterDx',
@@ -57,6 +60,7 @@ export const siteConfig = {
       from: 'July 2025',
       to: 'Present',
       companyLink: 'https://www.smarterdx.com/',
+      stage: 'Unicorn',
     },
     {
       company: 'Perennial',
@@ -64,6 +68,7 @@ export const siteConfig = {
       from: 'February 2023',
       to: 'July 2025',
       companyLink: 'https://www.perennial.earth/',
+      stage: 'Series A',
     },
     {
       company: 'Ontra',
@@ -71,6 +76,7 @@ export const siteConfig = {
       from: 'August 2022',
       to: 'February 2023',
       companyLink: 'https://www.ontra.ai/',
+      stage: 'Series B',
     },
     {
       company: 'Drizly',
@@ -78,6 +84,7 @@ export const siteConfig = {
       from: 'August 2021',
       to: 'June 2022',
       companyLink: 'https://drizly.com/',
+      stage: 'Acquired',
     },
     {
       company: 'Humana',
@@ -85,6 +92,7 @@ export const siteConfig = {
       from: 'November 2012',
       to: 'August 2021',
       companyLink: 'https://www.humana.com/',
+      stage: 'Fortune 50',
     },
   ] satisfies Experience[],
   educations: [

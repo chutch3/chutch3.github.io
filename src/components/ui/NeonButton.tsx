@@ -35,6 +35,7 @@ export default function NeonButton({
         className={baseClasses}
         target={external ? '_blank' : undefined}
         rel={external ? 'noreferrer' : undefined}
+        onClick={onClick}
       >
         {children}
       </a>
@@ -43,7 +44,7 @@ export default function NeonButton({
 
   if (to) {
     return (
-      <Link to={to} className={baseClasses}>
+      <Link to={to} className={baseClasses} onClick={onClick}>
         {children}
       </Link>
     );

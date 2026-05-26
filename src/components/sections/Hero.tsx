@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import GlitchText from '@/components/ui/GlitchText';
 import NeonButton from '@/components/ui/NeonButton';
 import { siteConfig } from '@/config/site.config';
+import { trackEvent } from '@/lib/analytics';
 
 export default function Hero() {
   return (
@@ -71,6 +72,7 @@ export default function Hero() {
             href={siteConfig.resume.url}
             variant="pink"
             external
+            onClick={() => trackEvent('view-resume', 'Hero Resume Button')}
           >
             View Resume
           </NeonButton>

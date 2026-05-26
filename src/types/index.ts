@@ -1,9 +1,12 @@
+export type CompanyStage = 'Series A' | 'Series B' | 'Unicorn' | 'Acquired' | 'Fortune 50' | 'Public';
+
 export interface Experience {
   company: string;
   position: string;
   from: string;
   to: string;
   companyLink?: string;
+  stage?: CompanyStage;
 }
 
 export interface Education {

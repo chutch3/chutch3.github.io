@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HelmetProvider } from 'react-helmet-async';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ScanlineOverlay from '@/components/layout/ScanlineOverlay';
+import { trackPageView } from '@/lib/analytics';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -21,6 +23,10 @@ const pageVariants = {
 
 export default function App() {
   const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location.pathname]);
 
   return (
     <HelmetProvider>
