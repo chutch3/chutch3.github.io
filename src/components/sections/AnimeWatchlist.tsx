@@ -109,9 +109,7 @@ export default function AnimeWatchlist() {
 
                   <div className="flex items-center justify-between text-xs text-cyber-muted">
                     {anime.episodes && (
-                      <span className="font-mono">
-                        {anime.episodes} eps
-                      </span>
+                      <span className="font-mono">{anime.episodes} eps</span>
                     )}
                     {anime.rating && <StarRating rating={anime.rating} />}
                   </div>

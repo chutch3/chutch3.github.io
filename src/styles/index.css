@@ -30,24 +30,37 @@
 
 @layer utilities {
   .neon-cyan {
-    text-shadow: 0 0 7px #00f5ff, 0 0 10px #00f5ff, 0 0 21px #00f5ff;
+    text-shadow:
+      0 0 7px #00f5ff,
+      0 0 10px #00f5ff,
+      0 0 21px #00f5ff;
   }
 
   .neon-pink {
-    text-shadow: 0 0 7px #ff2d7b, 0 0 10px #ff2d7b, 0 0 21px #ff2d7b;
+    text-shadow:
+      0 0 7px #ff2d7b,
+      0 0 10px #ff2d7b,
+      0 0 21px #ff2d7b;
   }
 
   .neon-yellow {
-    text-shadow: 0 0 7px #f5ff00, 0 0 10px #f5ff00, 0 0 21px #f5ff00;
+    text-shadow:
+      0 0 7px #f5ff00,
+      0 0 10px #f5ff00,
+      0 0 21px #f5ff00;
   }
 
   .neon-border-cyan {
-    box-shadow: 0 0 5px #00f5ff, inset 0 0 5px rgba(0, 245, 255, 0.1);
+    box-shadow:
+      0 0 5px #00f5ff,
+      inset 0 0 5px rgba(0, 245, 255, 0.1);
     border-color: #00f5ff;
   }
 
   .neon-border-pink {
-    box-shadow: 0 0 5px #ff2d7b, inset 0 0 5px rgba(255, 45, 123, 0.1);
+    box-shadow:
+      0 0 5px #ff2d7b,
+      inset 0 0 5px rgba(255, 45, 123, 0.1);
     border-color: #ff2d7b;
   }
 
@@ -59,19 +72,35 @@
   }
 
   .glow-cyan {
-    background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0, 245, 255, 0.04) 0%, transparent 70%);
+    background: radial-gradient(
+      ellipse 60% 40% at 50% 0%,
+      rgba(0, 245, 255, 0.04) 0%,
+      transparent 70%
+    );
   }
 
   .glow-pink {
-    background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255, 45, 123, 0.04) 0%, transparent 70%);
+    background: radial-gradient(
+      ellipse 60% 40% at 50% 0%,
+      rgba(255, 45, 123, 0.04) 0%,
+      transparent 70%
+    );
   }
 
   .glow-yellow {
-    background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(245, 255, 0, 0.03) 0%, transparent 70%);
+    background: radial-gradient(
+      ellipse 60% 40% at 50% 0%,
+      rgba(245, 255, 0, 0.03) 0%,
+      transparent 70%
+    );
   }
 
   .glow-purple {
-    background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(184, 41, 221, 0.04) 0%, transparent 70%);
+    background: radial-gradient(
+      ellipse 60% 40% at 50% 0%,
+      rgba(184, 41, 221, 0.04) 0%,
+      transparent 70%
+    );
   }
 
   .noise-bg {

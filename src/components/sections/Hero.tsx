@@ -79,7 +79,6 @@ export default function Hero() {
           </NeonButton>
         </motion.div>
       </motion.div>
-
     </section>
   );
 }

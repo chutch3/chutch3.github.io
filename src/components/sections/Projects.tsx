@@ -51,7 +51,12 @@ export default function Projects() {
                           rel="noreferrer"
                           className="text-cyber-muted hover:text-cyber-cyan transition-colors"
                           aria-label="View source"
-                          onClick={() => trackEvent(`project-github-${project.title.toLowerCase().replace(/\s+/g, '-')}`, project.title)}
+                          onClick={() =>
+                            trackEvent(
+                              `project-github-${project.title.toLowerCase().replace(/\s+/g, '-')}`,
+                              project.title,
+                            )
+                          }
                         >
                           <FaGithub size={16} />
                         </a>
@@ -63,7 +68,12 @@ export default function Projects() {
                           rel="noreferrer"
                           className="text-cyber-muted hover:text-cyber-cyan transition-colors"
                           aria-label="View project"
-                          onClick={() => trackEvent(`project-link-${project.title.toLowerCase().replace(/\s+/g, '-')}`, project.title)}
+                          onClick={() =>
+                            trackEvent(
+                              `project-link-${project.title.toLowerCase().replace(/\s+/g, '-')}`,
+                              project.title,
+                            )
+                          }
                         >
                           <HiExternalLink size={18} />
                         </a>

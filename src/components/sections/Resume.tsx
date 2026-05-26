@@ -20,10 +20,10 @@ const skillCategories = [
 const stageStyles: Record<CompanyStage, string> = {
   'Series A': 'border-cyber-cyan/40 text-cyber-cyan/70',
   'Series B': 'border-cyber-cyan/40 text-cyber-cyan/70',
-  'Unicorn': 'border-cyber-yellow/40 text-cyber-yellow/70',
-  'Acquired': 'border-cyber-purple/40 text-cyber-purple/70',
+  Unicorn: 'border-cyber-yellow/40 text-cyber-yellow/70',
+  Acquired: 'border-cyber-purple/40 text-cyber-purple/70',
   'Fortune 50': 'border-cyber-pink/40 text-cyber-pink/70',
-  'Public': 'border-cyber-pink/40 text-cyber-pink/70',
+  Public: 'border-cyber-pink/40 text-cyber-pink/70',
 };
 
 export default function Resume() {
@@ -140,7 +140,9 @@ export default function Resume() {
           </h3>
           <div className="space-y-6">
             {skillCategories.map(({ key, label }, catIndex) => {
-              const skills = siteConfig.skills.filter((s) => s.category === key);
+              const skills = siteConfig.skills.filter(
+                (s) => s.category === key,
+              );
               if (skills.length === 0) return null;
               return (
                 <div
@@ -150,7 +152,11 @@ export default function Resume() {
                       ? 'opacity-100 translate-y-0'
                       : 'opacity-0 translate-y-4'
                   }`}
-                  style={{ transitionDelay: skillsVisible ? `${catIndex * 100}ms` : '0ms' }}
+                  style={{
+                    transitionDelay: skillsVisible
+                      ? `${catIndex * 100}ms`
+                      : '0ms',
+                  }}
                 >
                   <p className="font-mono text-xs text-cyber-muted mb-3 uppercase tracking-wider">
                     {label}

@@ -3,7 +3,8 @@ import type { Experience, Education, Skill, SocialLinks } from '@/types';
 export const siteConfig = {
   name: 'Cody Hutchens',
   title: 'Senior ML Engineer',
-  tagline: 'Building intelligent systems. Advocating for data privacy. Watching too much anime.',
+  tagline:
+    'Building intelligent systems. Advocating for data privacy. Watching too much anime.',
   jpTagline: '機械学習エンジニア',
   social: {
     linkedin: 'codyhutchens',
@@ -64,7 +65,8 @@ export const siteConfig = {
       to: 'Present',
       companyLink: 'https://www.smarterdx.com/',
       stage: 'Unicorn',
-      summary: 'LLM-powered clinical AI for hospital revenue integrity and quality reporting.',
+      summary:
+        'LLM-powered clinical AI for hospital revenue integrity and quality reporting.',
     },
     {
       company: 'Perennial',
@@ -73,7 +75,8 @@ export const siteConfig = {
       to: 'July 2025',
       companyLink: 'https://www.perennial.earth/',
       stage: 'Series A',
-      summary: 'Soil carbon estimation at global scale — feature engineering, distributed training, GCP infra.',
+      summary:
+        'Soil carbon estimation at global scale — feature engineering, distributed training, GCP infra.',
     },
     {
       company: 'Ontra',
@@ -82,7 +85,8 @@ export const siteConfig = {
       to: 'February 2023',
       companyLink: 'https://www.ontra.ai/',
       stage: 'Series B',
-      summary: 'ML model gateway and async serving stack for legal document AI.',
+      summary:
+        'ML model gateway and async serving stack for legal document AI.',
     },
     {
       company: 'Drizly',
@@ -91,7 +95,8 @@ export const siteConfig = {
       to: 'June 2022',
       companyLink: 'https://drizly.com/',
       stage: 'Acquired',
-      summary: 'Contextual multi-armed bandit for shelf optimization and conversion.',
+      summary:
+        'Contextual multi-armed bandit for shelf optimization and conversion.',
     },
     {
       company: 'Humana',
@@ -100,13 +105,15 @@ export const siteConfig = {
       to: 'August 2021',
       companyLink: 'https://www.humana.com/',
       stage: 'Fortune 50',
-      summary: 'Deep learning for cost transparency, experimentation platform, TensorFlow in production.',
+      summary:
+        'Deep learning for cost transparency, experimentation platform, TensorFlow in production.',
     },
   ] satisfies Experience[],
   educations: [
     {
       institution: 'Georgia Institute of Technology',
-      degree: 'Master of Science — Computer Science, Specialization in Machine Learning',
+      degree:
+        'Master of Science — Computer Science, Specialization in Machine Learning',
       from: '2018',
       to: '2021',
     },

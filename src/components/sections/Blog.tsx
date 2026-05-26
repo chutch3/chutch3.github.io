@@ -25,8 +25,8 @@ export default function Blog() {
               </p>
             </div>
             <p className="text-cyber-muted text-sm mt-6">
-              Blog posts are coming soon. I'll be writing about data privacy,
-              ML engineering, and whatever else is on my mind.
+              Blog posts are coming soon. I'll be writing about data privacy, ML
+              engineering, and whatever else is on my mind.
             </p>
           </div>
         </motion.div>

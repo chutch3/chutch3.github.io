@@ -1,4 +1,10 @@
-export type CompanyStage = 'Series A' | 'Series B' | 'Unicorn' | 'Acquired' | 'Fortune 50' | 'Public';
+export type CompanyStage =
+  | 'Series A'
+  | 'Series B'
+  | 'Unicorn'
+  | 'Acquired'
+  | 'Fortune 50'
+  | 'Public';
 
 export interface Experience {
   company: string;
@@ -32,7 +38,12 @@ export interface Project {
   featured?: boolean;
 }
 
-export type WatchStatus = 'watching' | 'completed' | 'plan-to-watch' | 'dropped' | 'on-hold';
+export type WatchStatus =
+  | 'watching'
+  | 'completed'
+  | 'plan-to-watch'
+  | 'dropped'
+  | 'on-hold';
 
 export interface AnimeEntry {
   title: string;

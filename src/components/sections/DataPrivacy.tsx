@@ -26,9 +26,9 @@ export default function DataPrivacy() {
         >
           <p>
             As an ML engineer, I see firsthand how data powers the systems we
-            build — and how easily the people behind that data can be
-            forgotten. Data privacy isn't just a compliance checkbox. It's a
-            question of respect.
+            build — and how easily the people behind that data can be forgotten.
+            Data privacy isn't just a compliance checkbox. It's a question of
+            respect.
           </p>
 
           <p>
@@ -55,7 +55,9 @@ export default function DataPrivacy() {
                       ? 'opacity-100 translate-x-0'
                       : 'opacity-0 translate-x-4'
                   }`}
-                  style={{ transitionDelay: listVisible ? `${i * 100}ms` : '0ms' }}
+                  style={{
+                    transitionDelay: listVisible ? `${i * 100}ms` : '0ms',
+                  }}
                 >
                   <span className="text-cyber-cyan mt-0.5">▹</span>
                   <span>{concern}</span>
@@ -65,8 +67,8 @@ export default function DataPrivacy() {
           </div>
 
           <p className="text-cyber-muted text-sm italic">
-            More thoughts on this topic coming soon in the blog section. This
-            is something I want to write more about.
+            More thoughts on this topic coming soon in the blog section. This is
+            something I want to write more about.
           </p>
         </motion.div>
       </div>

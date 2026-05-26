@@ -14,7 +14,8 @@ interface NeonButtonProps {
 const variantStyles = {
   cyan: 'border-cyber-cyan text-cyber-cyan hover:bg-cyber-cyan/10 hover:shadow-[0_0_15px_rgba(0,245,255,0.3)]',
   pink: 'border-cyber-pink text-cyber-pink hover:bg-cyber-pink/10 hover:shadow-[0_0_15px_rgba(255,45,123,0.3)]',
-  yellow: 'border-cyber-yellow text-cyber-yellow hover:bg-cyber-yellow/10 hover:shadow-[0_0_15px_rgba(245,255,0,0.3)]',
+  yellow:
+    'border-cyber-yellow text-cyber-yellow hover:bg-cyber-yellow/10 hover:shadow-[0_0_15px_rgba(245,255,0,0.3)]',
 };
 
 export default function NeonButton({
