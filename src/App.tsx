@@ -57,7 +57,7 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </main>
-        <Footer />
+        {location.pathname !== '/' && <Footer />}
         <PixelMascot />
         <EasterEggs />
       </div>
