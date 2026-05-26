@@ -6,19 +6,19 @@ import { trackEvent } from '@/lib/analytics';
 
 export default function Hero() {
   return (
-    <section className="relative h-[100dvh] -mt-16 flex flex-col items-center justify-center px-6 grid-bg noise-bg overflow-hidden">
+    <section className="relative h-[100dvh] -mt-16 pt-16 flex flex-col items-center justify-center px-6 grid-bg noise-bg overflow-hidden">
       {/* Ambient glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyber-cyan/[0.03] rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyber-cyan/[0.03] rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-cyber-pink/[0.02] rounded-full blur-[100px] pointer-events-none" />
       {/* Decorative corner accents */}
       <div className="absolute top-24 left-6 w-16 h-16 border-l border-t border-cyber-cyan/20" />
-      <div className="absolute bottom-24 right-6 w-16 h-16 border-r border-b border-cyber-pink/20" />
+      <div className="absolute bottom-12 right-6 w-16 h-16 border-r border-b border-cyber-pink/20" />
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="text-center"
+        className="text-center -mt-8 md:-mt-12"
       >
         {/* Japanese subtitle */}
         <motion.p
