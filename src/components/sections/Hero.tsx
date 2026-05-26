@@ -1,6 +1,4 @@
 import { motion } from 'framer-motion';
-import { HiChevronDown } from 'react-icons/hi';
-import { Link } from 'react-router-dom';
 import GlitchText from '@/components/ui/GlitchText';
 import NeonButton from '@/components/ui/NeonButton';
 import { siteConfig } from '@/config/site.config';
@@ -82,28 +80,6 @@ export default function Hero() {
         </motion.div>
       </motion.div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-        className="absolute bottom-8"
-      >
-        <Link
-          to="/about"
-          className="flex flex-col items-center gap-1 text-cyber-muted hover:text-cyber-cyan transition-colors"
-        >
-          <span className="text-[10px] font-heading uppercase tracking-widest">
-            Scroll
-          </span>
-          <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-          >
-            <HiChevronDown size={20} />
-          </motion.div>
-        </Link>
-      </motion.div>
     </section>
   );
 }
