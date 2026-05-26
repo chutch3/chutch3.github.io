@@ -22,6 +22,31 @@ const PALETTE: Record<number, string> = {
 };
 
 const GLOW_COLOR = 'rgba(0, 245, 255, 0.25)';
+const OC_GLOW = 'rgba(255, 45, 123, 0.35)';
+
+const OC_PALETTE: Record<number, string> = {
+  [x]: '',
+  [H]: '#ff2d7b',
+  [K]: '#12121a',
+  [S]: '#8b7080',
+  [C]: '#2a1a2e',
+  [B]: '#0a0a0f',
+  [A]: '#f5ff00',
+  [G]: '#ff2d7b',
+};
+
+const CLICKS_TO_OVERCLOCK = 5;
+const CLICK_WINDOW = 40; // ticks (~2 seconds)
+const OVERCLOCK_DURATION = 130; // ticks (~6.5 seconds)
+
+const OC_SPEECH = [
+  '▓ SYSTEM_OVERRIDE ▓',
+  'オーバークロック',
+  'LIMIT//BREAK',
+  '>>> MAX POWER <<<',
+  '[ UNLOCKED ]',
+  'root@cyber:~#',
+];
 const SCALE = 4;
 const SPW = 16;
 const SPH = 22;
@@ -198,7 +223,9 @@ type Behavior =
   | 'fleeing'
   | 'jumping'
   | 'glitchOut'
-  | 'clicked';
+  | 'clicked'
+  | 'transforming'
+  | 'overclocked';
 
 interface Platform {
   y: number;
@@ -258,6 +285,7 @@ export default function PixelMascot() {
   const [speechPos, setSpeechPos] = useState({ x: 0, y: 0 });
   const [glitchFx, setGlitchFx] = useState(false);
   const [fxPos, setFxPos] = useState({ x: 0, y: 0 });
+  const [ocAura, setOcAura] = useState(false);
   const routeRef = useRef(location.pathname);
   const clickRef = useRef(false);
 
@@ -271,45 +299,50 @@ export default function PixelMascot() {
       frame: number[][],
       flip: boolean,
       glitch = false,
+      oc = false,
     ) => {
       const data = flip ? mirrorFrame(frame) : frame;
       const cw = SPW * SCALE;
       const ch = SPH * SCALE;
+      const pal = oc ? OC_PALETTE : PALETTE;
+      const glowCol = oc ? OC_GLOW : GLOW_COLOR;
+      const glowShadow = oc ? '#ff2d7b' : '#00f5ff';
       ctx.clearRect(0, 0, cw, ch);
 
       // Neon glow underlay
-      ctx.shadowColor = '#00f5ff';
-      ctx.shadowBlur = 6;
+      ctx.shadowColor = glowShadow;
+      ctx.shadowBlur = oc ? 12 : 6;
       for (let row = 0; row < SPH; row++) {
         for (let col = 0; col < SPW; col++) {
           if (data[row][col] === x) continue;
-          ctx.fillStyle = GLOW_COLOR;
+          ctx.fillStyle = glowCol;
           ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
         }
       }
       ctx.shadowBlur = 0;
 
       // Glitch: offset color channels
-      if (glitch) {
-        ctx.globalAlpha = 0.4;
+      if (glitch || oc) {
+        const offset = oc ? 5 : 3;
+        ctx.globalAlpha = oc ? 0.5 : 0.4;
         for (let row = 0; row < SPH; row++) {
           for (let col = 0; col < SPW; col++) {
             if (data[row][col] === x) continue;
-            ctx.fillStyle = '#00f5ff';
-            ctx.fillRect(col * SCALE - 3, row * SCALE, SCALE, SCALE);
-            ctx.fillStyle = '#ff2d7b';
-            ctx.fillRect(col * SCALE + 3, row * SCALE, SCALE, SCALE);
+            ctx.fillStyle = oc ? '#ff2d7b' : '#00f5ff';
+            ctx.fillRect(col * SCALE - offset, row * SCALE, SCALE, SCALE);
+            ctx.fillStyle = oc ? '#f5ff00' : '#ff2d7b';
+            ctx.fillRect(col * SCALE + offset, row * SCALE, SCALE, SCALE);
           }
         }
         ctx.globalAlpha = 1;
       }
 
-      // Main sprite
+      // Main sprite with palette
       for (let row = 0; row < SPH; row++) {
         for (let col = 0; col < SPW; col++) {
           const pixel = data[row][col];
           if (pixel === x) continue;
-          ctx.fillStyle = PALETTE[pixel];
+          ctx.fillStyle = pal[pixel];
           ctx.fillRect(col * SCALE, row * SCALE, SCALE, SCALE);
         }
       }
@@ -344,6 +377,10 @@ export default function PixelMascot() {
       visible: false,
       behaviorsThisVisit: 0,
       glitchTimer: 0,
+      clickCount: 0,
+      clickDecay: 0,
+      overclocked: false,
+      ocTimer: 0,
     };
 
     function getPlatformsForRoute(): Platform[] {
@@ -462,24 +499,45 @@ export default function PixelMascot() {
     const loop = setInterval(() => {
       s.tick++;
 
+      // Click decay
+      if (s.clickDecay > 0) {
+        s.clickDecay--;
+        if (s.clickDecay <= 0) s.clickCount = 0;
+      }
+
       // Handle click/tap
       if (
         clickRef.current &&
         s.visible &&
         s.behavior !== 'offscreen' &&
         s.behavior !== 'glitchIn' &&
-        s.behavior !== 'glitchOut'
+        s.behavior !== 'glitchOut' &&
+        s.behavior !== 'transforming' &&
+        s.behavior !== 'overclocked'
       ) {
         clickRef.current = false;
-        s.behavior = 'clicked';
-        s.timer = 30;
-        s.glitchTimer = 8;
-        showSpeech(
-          CLICK_SPEECH[Math.floor(Math.random() * CLICK_SPEECH.length)],
-          28,
-        );
-        setGlitchFx(true);
-        setFxPos({ x: s.posX, y: s.posY });
+        s.clickCount++;
+        s.clickDecay = CLICK_WINDOW;
+
+        if (s.clickCount >= CLICKS_TO_OVERCLOCK) {
+          s.clickCount = 0;
+          s.behavior = 'transforming';
+          s.timer = 25;
+          s.glitchTimer = 25;
+          showSpeech('...!!', 20);
+          setGlitchFx(true);
+          setFxPos({ x: s.posX, y: s.posY });
+        } else {
+          s.behavior = 'clicked';
+          s.timer = 30;
+          s.glitchTimer = 8;
+          showSpeech(
+            CLICK_SPEECH[Math.floor(Math.random() * CLICK_SPEECH.length)],
+            28,
+          );
+          setGlitchFx(true);
+          setFxPos({ x: s.posX, y: s.posY });
+        }
       }
       clickRef.current = false;
 
@@ -535,12 +593,76 @@ export default function PixelMascot() {
         }
       }
 
+      // Transformation sequence
+      if (s.behavior === 'transforming') {
+        s.timer--;
+        s.posY += s.tick % 2 === 0 ? -1 : 1;
+        if (s.timer <= 0) {
+          s.behavior = 'overclocked';
+          s.overclocked = true;
+          s.ocTimer = OVERCLOCK_DURATION;
+          s.posY = platYPos(curPlat);
+          showSpeech(
+            OC_SPEECH[Math.floor(Math.random() * OC_SPEECH.length)],
+            60,
+          );
+          setOcAura(true);
+          setFxPos({ x: s.posX, y: s.posY });
+        }
+      }
+
+      // Overclocked mode — erratic fast movement
+      if (s.behavior === 'overclocked') {
+        s.ocTimer--;
+        setFxPos({ x: s.posX, y: s.posY });
+
+        // Erratic speed changes
+        s.speed = 2.5 + Math.sin(s.tick * 0.3) * 1.5;
+        s.posX += s.direction * s.speed;
+
+        // Reverse at platform edges
+        const left = platLeft(curPlat);
+        const right = platRight(curPlat);
+        if (s.posX <= left) {
+          s.posX = left;
+          s.direction = 1;
+        }
+        if (s.posX >= right) {
+          s.posX = right;
+          s.direction = -1;
+        }
+
+        // Random direction changes
+        if (Math.random() < 0.05) s.direction *= -1;
+
+        // Random speech
+        if (s.ocTimer === 80 || s.ocTimer === 40) {
+          showSpeech(
+            OC_SPEECH[Math.floor(Math.random() * OC_SPEECH.length)],
+            30,
+          );
+        }
+
+        // Power down
+        if (s.ocTimer <= 0) {
+          s.overclocked = false;
+          s.behavior = 'idle';
+          s.timer = 40;
+          s.speed = 1.2;
+          setOcAura(false);
+          setGlitchFx(false);
+          showSpeech('...rebooting', 40);
+        }
+      }
+
       // Cursor flee
       if (
         s.behavior !== 'jumping' &&
         s.behavior !== 'glitchOut' &&
         s.behavior !== 'glitchIn' &&
-        s.behavior !== 'clicked'
+        s.behavior !== 'clicked' &&
+        s.behavior !== 'transforming' &&
+        s.behavior !== 'overclocked'
       ) {
         const cx = s.posX + sprW / 2;
         const cy = s.posY + sprH / 2;
@@ -609,7 +731,9 @@ export default function PixelMascot() {
         s.behavior !== 'glitchIn' &&
         s.behavior !== 'glitchOut' &&
         s.behavior !== 'jumping' &&
-        s.behavior !== 'clicked'
+        s.behavior !== 'clicked' &&
+        s.behavior !== 'transforming' &&
+        s.behavior !== 'overclocked'
       ) {
         s.timer--;
         if (s.timer <= 0) pickBehavior();
@@ -639,6 +763,7 @@ export default function PixelMascot() {
         s.behavior === 'glitchIn' ||
         s.behavior === 'glitchOut' ||
         s.behavior === 'powerup' ||
+        s.behavior === 'transforming' ||
         (s.behavior === 'clicked' && s.glitchTimer > 0);
 
       switch (s.behavior) {
@@ -674,6 +799,12 @@ export default function PixelMascot() {
                 ? WALK_R
                 : WALK_L;
           break;
+        case 'transforming':
+          sprite = s.tick % 2 === 0 ? STAND : WALK_R;
+          break;
+        case 'overclocked':
+          sprite = WALK_FRAMES[Math.floor(s.tick / 3) % 4];
+          break;
         default:
           sprite = STAND;
       }
@@ -682,9 +813,19 @@ export default function PixelMascot() {
       if (s.behavior === 'glitchIn' || s.behavior === 'glitchOut') {
         canvas.style.opacity = s.tick % 2 === 0 ? '1' : '0.3';
       }
+      // Transformation flicker between normal and OC palette
+      if (s.behavior === 'transforming') {
+        canvas.style.opacity = s.tick % 3 === 0 ? '0.4' : '1';
+      }
 
       canvas.style.transform = `translate(${Math.round(s.posX)}px, ${Math.round(s.posY)}px)`;
-      drawSprite(ctx, sprite, flip, isGlitching);
+      drawSprite(
+        ctx,
+        sprite,
+        flip,
+        isGlitching,
+        s.overclocked || (s.behavior === 'transforming' && s.timer < 15),
+      );
     }, 1000 / 20);
 
     return () => {
@@ -719,7 +860,7 @@ export default function PixelMascot() {
           </div>
         </div>
       )}
-      {glitchFx && (
+      {glitchFx && !ocAura && (
         <div
           className="fixed z-30 pointer-events-none"
           style={{
@@ -735,6 +876,34 @@ export default function PixelMascot() {
               background:
                 'radial-gradient(circle, rgba(0,245,255,0.15) 0%, transparent 70%)',
               animation: 'glow-pulse 0.3s ease-in-out infinite alternate',
+            }}
+          />
+        </div>
+      )}
+      {ocAura && (
+        <div
+          className="fixed z-30 pointer-events-none"
+          style={{
+            left: fxPos.x - 20,
+            top: fxPos.y - 25,
+            width: SPW * SCALE + 40,
+            height: SPH * SCALE + 50,
+          }}
+        >
+          <div
+            className="w-full h-full rounded-full animate-pulse"
+            style={{
+              background:
+                'radial-gradient(ellipse, rgba(255,45,123,0.2) 0%, rgba(245,255,0,0.05) 50%, transparent 70%)',
+            }}
+          />
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background:
+                'radial-gradient(ellipse, rgba(255,45,123,0.1) 0%, transparent 60%)',
+              animation: 'glow-pulse 0.2s ease-in-out infinite alternate',
+              transform: 'scale(1.3)',
             }}
           />
         </div>
