@@ -6,7 +6,7 @@ import { trackEvent } from '@/lib/analytics';
 
 export default function Hero() {
   return (
-    <section className="relative h-screen flex flex-col items-center justify-center px-6 grid-bg noise-bg overflow-hidden">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 grid-bg noise-bg overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyber-cyan/[0.03] rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-cyber-pink/[0.02] rounded-full blur-[100px] pointer-events-none" />
@@ -31,7 +31,7 @@ export default function Hero() {
         </motion.p>
 
         {/* Name */}
-        <h1 className="font-heading text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-wider mb-6">
+        <h1 className="font-heading text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-wider mb-4 md:mb-6">
           <GlitchText text={siteConfig.name} className="text-cyber-text" />
         </h1>
 
@@ -40,7 +40,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="flex items-center justify-center gap-3 mb-8"
+          className="flex items-center justify-center gap-3 mb-5 md:mb-8"
         >
           <div className="h-px w-12 bg-cyber-cyan/50" />
           <p className="font-mono text-sm text-cyber-cyan tracking-widest uppercase">
@@ -54,7 +54,7 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.6 }}
-          className="text-cyber-muted max-w-lg mx-auto mb-10 text-sm leading-relaxed"
+          className="text-cyber-muted max-w-lg mx-auto mb-6 md:mb-10 text-sm leading-relaxed"
         >
           {siteConfig.tagline}
         </motion.p>
