@@ -385,6 +385,10 @@ export default function Homelab() {
               </p>
               {ghStatus && (
                 <div className="mt-4 pt-4 border-t border-cyber-border">
+                  <p className="font-mono text-[10px] text-cyber-muted mb-3">
+                    this site is hosted on github pages. let's see who's keeping
+                    the lights on:
+                  </p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-cyber-muted">
