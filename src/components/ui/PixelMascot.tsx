@@ -315,6 +315,9 @@ export default function PixelMascot() {
       speechTimer: 0,
       sleepBubbleGrow: 0,
       visible: false,
+      clicked: false,
+      clickCount: 0,
+      clickDecay: 0,
     };
 
     const onMouse = (e: MouseEvent) => {
@@ -322,6 +325,12 @@ export default function PixelMascot() {
       s.mouseY = e.clientY;
     };
     window.addEventListener('mousemove', onMouse);
+
+    const onClick = () => {
+      s.clicked = true;
+    };
+    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('touchstart', onClick);
 
     const onResize = () => {
       platforms = getPagePlatforms(location.pathname, window.innerHeight);
@@ -351,10 +360,34 @@ export default function PixelMascot() {
       s.visible = true;
     }
 
+    const CLICK_SPEECH = ['NANI?!', 'oi!', 'やめて!', '(╯°□°)╯', 'hey!!', '!?'];
+
     const loop = setInterval(() => {
       s.tick++;
       const cw = window.innerWidth;
       const curPlat = platforms[s.platform] || platforms[0];
+
+      // ── click decay ──
+      if (s.clickDecay > 0) {
+        s.clickDecay--;
+        if (s.clickDecay <= 0) s.clickCount = 0;
+      }
+
+      // ── handle click/tap ──
+      if (s.clicked && s.visible && s.behavior !== 'offscreen') {
+        s.clicked = false;
+        s.clickCount++;
+        s.clickDecay = 40;
+        setSpeech(
+          CLICK_SPEECH[Math.floor(Math.random() * CLICK_SPEECH.length)],
+        );
+        s.speechTimer = 28;
+        s.behavior = 'fleeing';
+        s.direction = Math.random() < 0.5 ? -1 : 1;
+        s.timer = 25;
+        s.speed = 3;
+      }
+      s.clicked = false;
 
       // ── cursor flee ──
       if (
@@ -446,7 +479,8 @@ export default function PixelMascot() {
         if (s.timer <= 0) pickEntrance();
         // clear canvas while offscreen
         ctx.clearRect(0, 0, SW * SCALE, SH * SCALE);
-        canvas.style.transform = 'translate(-200px, -200px)';
+        canvas.style.left = '-200px';
+        canvas.style.top = '-200px';
         return;
       }
 
@@ -554,7 +588,8 @@ export default function PixelMascot() {
           sprite = STAND;
       }
 
-      canvas.style.transform = `translate(${Math.round(s.x)}px, ${Math.round(s.y)}px)`;
+      canvas.style.left = `${Math.round(s.x)}px`;
+      canvas.style.top = `${Math.round(s.y)}px`;
       drawSprite(ctx, sprite, flip);
     }, 1000 / 20);
 
@@ -562,6 +597,8 @@ export default function PixelMascot() {
       clearInterval(loop);
       window.removeEventListener('mousemove', onMouse);
       window.removeEventListener('resize', onResize);
+      canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('touchstart', onClick);
     };
   }, [drawSprite, location.pathname]);
 
@@ -571,7 +608,7 @@ export default function PixelMascot() {
         ref={canvasRef}
         width={SW * SCALE}
         height={SH * SCALE}
-        className="fixed top-0 left-0 z-40 pointer-events-none"
+        className="fixed top-0 left-0 z-40 cursor-pointer"
         style={{ imageRendering: 'pixelated' }}
       />
       {speech && (
