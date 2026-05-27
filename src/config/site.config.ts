@@ -41,6 +41,11 @@ export const siteConfig = {
     siteCode: 'chutch3-portfolio',
   },
 
+  // ─── Homelab Status ───────────────────────────────────────
+  homelab: {
+    statusUrl: '',
+  },
+
   // ─── Features (toggle on/off) ────────────────────────────
   features: {
     mascot: true,
@@ -49,6 +54,7 @@ export const siteConfig = {
     blogPage: true,
     animePage: true,
     privacyPage: true,
+    homelabPage: true,
   },
 
   // ─── Section Labels ──────────────────────────────────────
@@ -58,6 +64,7 @@ export const siteConfig = {
     projects: { title: 'Projects', jp: 'プロジェクト' },
     blog: { title: 'Blog', jp: 'ブログ' },
     anime: { title: 'Watchlist', jp: 'アニメリスト' },
+    homelab: { title: 'Homelab', jp: 'ホームラボ' },
     privacy: { title: 'Data Privacy', jp: 'データプライバシー' },
   },
 

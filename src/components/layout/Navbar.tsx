@@ -9,8 +9,13 @@ const navLinks = [
   { path: '/about', label: 'About' },
   { path: '/resume', label: 'Resume' },
   { path: '/projects', label: 'Projects' },
-  { path: '/blog', label: 'Blog' },
-  { path: '/anime', label: 'Anime' },
+  ...(siteConfig.features.homelabPage
+    ? [{ path: '/homelab', label: 'Homelab' }]
+    : []),
+  ...(siteConfig.features.blogPage ? [{ path: '/blog', label: 'Blog' }] : []),
+  ...(siteConfig.features.animePage
+    ? [{ path: '/anime', label: 'Anime' }]
+    : []),
 ];
 
 export default function Navbar() {

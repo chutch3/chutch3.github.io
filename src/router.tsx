@@ -7,6 +7,7 @@ import ProjectsPage from './pages/ProjectsPage';
 import BlogPage from './pages/BlogPage';
 import AnimePage from './pages/AnimePage';
 import PrivacyPage from './pages/PrivacyPage';
+import HomelabPage from './pages/HomelabPage';
 import { siteConfig } from '@/config/site.config';
 
 const featureRoutes = [
@@ -18,6 +19,9 @@ const featureRoutes = [
     : []),
   ...(siteConfig.features.privacyPage
     ? [{ path: 'privacy', element: <PrivacyPage /> }]
+    : []),
+  ...(siteConfig.features.homelabPage
+    ? [{ path: 'homelab', element: <HomelabPage /> }]
     : []),
 ];
 
