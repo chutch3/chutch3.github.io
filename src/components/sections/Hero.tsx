@@ -6,7 +6,7 @@ import { trackEvent } from '@/lib/analytics';
 
 export default function Hero() {
   return (
-    <section className="relative h-[calc(100dvh-4rem)] flex flex-col items-center justify-center px-6 grid-bg noise-bg overflow-hidden">
+    <section className="relative h-[calc(100dvh-4rem)] grid place-items-center px-6 grid-bg noise-bg overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-cyber-cyan/[0.03] rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-cyber-pink/[0.02] rounded-full blur-[100px] pointer-events-none" />
@@ -18,7 +18,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="text-center -mt-8 md:-mt-12"
+        className="text-center"
       >
         {/* Japanese subtitle */}
         <motion.p
