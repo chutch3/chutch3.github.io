@@ -7,13 +7,11 @@ import { siteConfig } from '@/config/site.config';
 interface Monitor {
   id: number;
   name: string;
-  type: string;
 }
 
 interface Heartbeat {
   status: number;
   time: string;
-  ping: number;
 }
 
 interface MonitorGroup {
@@ -30,36 +28,44 @@ interface StatusData {
 
 type FetchState = 'loading' | 'online' | 'offline';
 
-const container = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.06 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-};
-
 function StatusDot({ up }: { up: boolean }) {
   return (
     <span
-      className={`inline-block w-2 h-2 rounded-full ${
+      className={`inline-block w-2.5 h-2.5 rounded-full ${
         up
-          ? 'bg-cyber-cyan shadow-[0_0_6px_rgba(0,245,255,0.5)]'
-          : 'bg-cyber-pink shadow-[0_0_6px_rgba(255,45,123,0.5)]'
+          ? 'bg-cyber-cyan shadow-[0_0_8px_rgba(0,245,255,0.6)]'
+          : 'bg-cyber-pink shadow-[0_0_8px_rgba(255,45,123,0.6)]'
       }`}
     />
   );
 }
 
+function HeartbeatTimeline({ beats }: { beats: Heartbeat[] }) {
+  const recent = beats.slice(-50);
+  return (
+    <div className="flex items-end gap-[2px] h-8">
+      {recent.map((beat, i) => (
+        <div
+          key={i}
+          className={`flex-1 min-w-[3px] rounded-sm transition-all ${
+            beat.status === 1
+              ? 'bg-cyber-cyan/40 hover:bg-cyber-cyan/70'
+              : 'bg-cyber-pink/60 hover:bg-cyber-pink'
+          }`}
+          style={{ height: beat.status === 1 ? '100%' : '100%' }}
+          title={`${beat.status === 1 ? 'UP' : 'DOWN'} — ${beat.time}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 function UptimeBar({ percent }: { percent: number }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1 bg-cyber-border rounded-full overflow-hidden">
+    <div className="flex items-center gap-3">
+      <div className="flex-1 h-1.5 bg-cyber-border rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full ${
+          className={`h-full rounded-full transition-all duration-500 ${
             percent >= 99
               ? 'bg-cyber-cyan'
               : percent >= 95
@@ -69,7 +75,15 @@ function UptimeBar({ percent }: { percent: number }) {
           style={{ width: `${percent}%` }}
         />
       </div>
-      <span className="font-mono text-[10px] text-cyber-muted w-12 text-right">
+      <span
+        className={`font-mono text-sm font-semibold ${
+          percent >= 99
+            ? 'text-cyber-cyan'
+            : percent >= 95
+              ? 'text-cyber-yellow'
+              : 'text-cyber-pink'
+        }`}
+      >
         {percent.toFixed(1)}%
       </span>
     </div>
@@ -124,18 +138,25 @@ export default function Homelab() {
       });
   }, [url]);
 
-  const monitors: { monitor: Monitor; up: boolean; uptime24: number }[] = [];
+  const monitors: {
+    monitor: Monitor;
+    up: boolean;
+    uptime24: number;
+    beats: Heartbeat[];
+  }[] = [];
   if (data) {
     for (const group of data.publicGroupList) {
       for (const mon of group.monitorList) {
         const beats = data.heartbeatList[String(mon.id)] || [];
         const lastBeat = beats[beats.length - 1];
         const up = lastBeat ? lastBeat.status === 1 : false;
-        const uptime24 = data.uptimeList[`${mon.id}_24`] ?? 0;
-        monitors.push({ monitor: mon, up, uptime24: uptime24 * 100 });
+        const uptime24 = (data.uptimeList[`${mon.id}_24`] ?? 0) * 100;
+        monitors.push({ monitor: mon, up, uptime24, beats });
       }
     }
   }
+
+  const allUp = monitors.length > 0 && monitors.every((m) => m.up);
 
   return (
     <section className="py-24 px-6 glow-cyan noise-bg">
@@ -157,41 +178,87 @@ export default function Homelab() {
 
         {state === 'online' && monitors.length > 0 && (
           <>
-            <div className="flex items-center gap-3 mb-8">
-              <StatusDot up={monitors.every((m) => m.up)} />
-              <span className="font-mono text-xs text-cyber-muted">
-                {monitors.filter((m) => m.up).length}/{monitors.length} services
-                operational
-              </span>
-            </div>
-
+            {/* Overall status */}
             <motion.div
-              variants={container}
-              initial="hidden"
-              animate="show"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex items-center gap-3 mb-10"
             >
-              {monitors.map(({ monitor, up, uptime24 }) => (
-                <motion.div key={monitor.id} variants={item}>
-                  <NeonCard className="!p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <StatusDot up={up} />
-                        <span className="font-body text-sm text-cyber-text">
-                          {monitor.name}
+              <StatusDot up={allUp} />
+              <span className="font-heading text-sm text-cyber-text uppercase tracking-wider">
+                {allUp ? 'All Systems Operational' : 'Degraded Performance'}
+              </span>
+              <span className="font-jp text-xs text-cyber-muted ml-1">
+                {allUp ? '正常稼働中' : '一部障害'}
+              </span>
+            </motion.div>
+
+            {/* Monitor cards */}
+            <div className="space-y-6">
+              {monitors.map(({ monitor, up, uptime24, beats }, i) => (
+                <motion.div
+                  key={monitor.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.15 + i * 0.1 }}
+                >
+                  <NeonCard>
+                    <div className="space-y-4">
+                      {/* Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <StatusDot up={up} />
+                          <h3 className="font-heading text-lg text-cyber-text uppercase tracking-wider">
+                            {monitor.name}
+                          </h3>
+                        </div>
+                        <span
+                          className={`font-mono text-xs px-2 py-1 border rounded-sm ${
+                            up
+                              ? 'text-cyber-cyan border-cyber-cyan/30'
+                              : 'text-cyber-pink border-cyber-pink/30'
+                          }`}
+                        >
+                          {up ? 'OPERATIONAL' : 'DOWN'}
                         </span>
                       </div>
-                      <span
-                        className={`font-mono text-[10px] ${up ? 'text-cyber-cyan' : 'text-cyber-pink'}`}
-                      >
-                        {up ? 'UP' : 'DOWN'}
-                      </span>
+
+                      {/* 24h uptime */}
+                      <div>
+                        <p className="font-mono text-[10px] text-cyber-muted uppercase tracking-wider mb-2">
+                          24h uptime
+                        </p>
+                        <UptimeBar percent={uptime24} />
+                      </div>
+
+                      {/* Heartbeat timeline */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-mono text-[10px] text-cyber-muted uppercase tracking-wider">
+                            Last {beats.length} checks
+                          </p>
+                          <p className="font-mono text-[10px] text-cyber-muted">
+                            ~{beats.length}m window
+                          </p>
+                        </div>
+                        <HeartbeatTimeline beats={beats} />
+                      </div>
                     </div>
-                    <UptimeBar percent={uptime24} />
                   </NeonCard>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
+
+            {/* Footer note */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-center font-mono text-[10px] text-cyber-muted mt-8"
+            >
+              updated every 15 min via uptime kuma → minio → tailscale funnel
+            </motion.p>
           </>
         )}
       </div>
