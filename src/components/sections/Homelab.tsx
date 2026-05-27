@@ -223,9 +223,15 @@ function SignalLost() {
   );
 }
 
+interface GitHubStatus {
+  indicator: string;
+  description: string;
+}
+
 export default function Homelab() {
   const [state, setState] = useState<FetchState>('loading');
   const [data, setData] = useState<StatusData | null>(null);
+  const [ghStatus, setGhStatus] = useState<GitHubStatus | null>(null);
   const url = siteConfig.homelab.statusUrl;
 
   useEffect(() => {
@@ -246,6 +252,11 @@ export default function Homelab() {
       .catch(() => {
         setState('offline');
       });
+
+    fetch('https://www.githubstatus.com/api/v2/status.json')
+      .then((res) => res.json())
+      .then((json: { status: GitHubStatus }) => setGhStatus(json.status))
+      .catch(() => {});
   }, [url]);
 
   const monitors: {
@@ -360,11 +371,63 @@ export default function Homelab() {
               ))}
             </div>
 
+            {/* Blurb */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="mt-12 border border-cyber-border rounded-lg p-6 bg-cyber-surface/30"
+            >
+              <p className="text-sm text-cyber-text/70 leading-relaxed">
+                Yes, you are looking at live metrics from my actual homelab
+                sitting in my house. Because why not put a status page on a
+                portfolio site? This is what being a nerd is all about.
+              </p>
+              {ghStatus && (
+                <div className="mt-4 pt-4 border-t border-cyber-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-cyber-muted">
+                        my homelab:
+                      </span>
+                      <StatusDot up={allUp} />
+                      <span
+                        className={`font-mono text-xs ${allUp ? 'text-cyber-cyan' : 'text-cyber-pink'}`}
+                      >
+                        {allUp ? 'UP' : 'DOWN'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-cyber-muted">
+                        github:
+                      </span>
+                      <StatusDot up={ghStatus.indicator === 'none'} />
+                      <span
+                        className={`font-mono text-xs ${ghStatus.indicator === 'none' ? 'text-cyber-cyan' : 'text-cyber-pink'}`}
+                      >
+                        {ghStatus.description.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  {ghStatus.indicator !== 'none' && (
+                    <p className="font-mono text-[10px] text-cyber-pink mt-2 text-right">
+                      outperforming a $100B company from my closet btw
+                    </p>
+                  )}
+                  {ghStatus.indicator === 'none' && allUp && (
+                    <p className="font-mono text-[10px] text-cyber-muted mt-2 text-right">
+                      rare moment: both up at the same time
+                    </p>
+                  )}
+                </div>
+              )}
+            </motion.div>
+
             {/* Footer note */}
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
               className="text-center font-mono text-[10px] text-cyber-muted mt-8"
             >
               updated every 15 min via uptime kuma → minio → tailscale funnel
