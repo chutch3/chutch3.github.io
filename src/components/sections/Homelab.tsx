@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import SectionHeading from '@/components/ui/SectionHeading';
 import NeonCard from '@/components/ui/NeonCard';
@@ -41,22 +41,132 @@ function StatusDot({ up }: { up: boolean }) {
 }
 
 function HeartbeatTimeline({ beats }: { beats: Heartbeat[] }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const recent = beats.slice(-50);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || recent.length === 0) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const padTop = 8;
+    const padBot = 4;
+    const graphH = h - padTop - padBot;
+    const upY = padTop;
+    const downY = padTop + graphH;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(0, 245, 255, 0.06)';
+    ctx.lineWidth = 0.5;
+    for (let gy = 0; gy < 4; gy++) {
+      const y = padTop + (graphH / 3) * gy;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    // Build points
+    const points: { x: number; y: number; up: boolean }[] = recent.map(
+      (beat, i) => ({
+        x: (i / (recent.length - 1)) * w,
+        y: beat.status === 1 ? upY : downY,
+        up: beat.status === 1,
+      }),
+    );
+
+    // Gradient fill under the line
+    const grad = ctx.createLinearGradient(0, upY, 0, downY);
+    grad.addColorStop(0, 'rgba(0, 245, 255, 0.12)');
+    grad.addColorStop(1, 'rgba(0, 245, 255, 0.0)');
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, downY);
+    points.forEach((p) => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(points[points.length - 1].x, downY);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Glow layer (wider, more transparent)
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      if (prev.up !== curr.up) {
+        ctx.lineTo(curr.x, prev.y);
+      }
+      ctx.lineTo(curr.x, curr.y);
+    }
+    ctx.strokeStyle = 'rgba(0, 245, 255, 0.2)';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Main line
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      if (prev.up !== curr.up) {
+        ctx.lineTo(curr.x, prev.y);
+      }
+      ctx.lineTo(curr.x, curr.y);
+    }
+    ctx.strokeStyle = '#00f5ff';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#00f5ff';
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Down segments in pink
+    for (let i = 0; i < points.length; i++) {
+      if (!points[i].up) {
+        const startX = i > 0 ? points[i - 1].x : points[i].x;
+        const endX =
+          i < points.length - 1
+            ? (points[i + 1]?.x ?? points[i].x)
+            : points[i].x;
+        ctx.beginPath();
+        ctx.moveTo(startX, downY);
+        ctx.lineTo(endX, downY);
+        ctx.strokeStyle = '#ff2d7b';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#ff2d7b';
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    // Current status dot
+    const last = points[points.length - 1];
+    ctx.beginPath();
+    ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = last.up ? '#00f5ff' : '#ff2d7b';
+    ctx.shadowColor = last.up ? '#00f5ff' : '#ff2d7b';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }, [recent]);
+
   return (
-    <div className="flex items-end gap-[2px] h-8">
-      {recent.map((beat, i) => (
-        <div
-          key={i}
-          className={`flex-1 min-w-[3px] rounded-sm transition-all ${
-            beat.status === 1
-              ? 'bg-cyber-cyan/40 hover:bg-cyber-cyan/70'
-              : 'bg-cyber-pink/60 hover:bg-cyber-pink'
-          }`}
-          style={{ height: beat.status === 1 ? '100%' : '100%' }}
-          title={`${beat.status === 1 ? 'UP' : 'DOWN'} — ${beat.time}`}
-        />
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="w-full h-16 rounded"
+      style={{ imageRendering: 'auto' }}
+    />
   );
 }
 
