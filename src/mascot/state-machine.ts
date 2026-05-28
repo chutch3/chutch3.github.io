@@ -53,6 +53,7 @@ const TUMBLE_SPIN = 0.25;
 const TUMBLE_DURATION = 30;
 const BORED_THRESHOLD = 600;
 const BORED_TO_SLEEP_TIMER = 200;
+const CLICKS_TO_POWERUP = 5;
 
 function platY(p: Platform, vh: number, sprH: number): number {
   return vh - p.y - sprH;
@@ -152,14 +153,29 @@ export function tick(
   if (input.clicked && s.visible && s.behavior !== 'offscreen') {
     s.clickCount++;
     s.clickDecay = 40;
-    const speechIdx = Math.floor(input.random() * CLICK_SPEECH.length);
-    effects.speech = CLICK_SPEECH[speechIdx];
-    effects.speechDuration = 28;
-    s.speechTimer = 28;
-    s.behavior = 'fleeing';
-    s.direction = input.random() < 0.5 ? -1 : 1;
-    s.timer = 25;
-    s.speed = config.fleeSpeed;
+    if (s.clickCount >= CLICKS_TO_POWERUP) {
+      // Rapid clicks within decay window force a powerup transformation.
+      // Works the same on mouse and touch so desktop users can trigger it
+      // deliberately — without this, continuous cursor flee on desktop
+      // prevents the random powerup roll from ever firing.
+      s.clickCount = 0;
+      s.behavior = 'powerup';
+      s.timer = 70;
+      effects.speech = 'HAAAA!!';
+      effects.speechDuration = 60;
+      s.speechTimer = 60;
+      effects.showPowerFx = true;
+      effects.powerFxPosition = { x: s.x, y: s.y };
+    } else {
+      const speechIdx = Math.floor(input.random() * CLICK_SPEECH.length);
+      effects.speech = CLICK_SPEECH[speechIdx];
+      effects.speechDuration = 28;
+      s.speechTimer = 28;
+      s.behavior = 'fleeing';
+      s.direction = input.random() < 0.5 ? -1 : 1;
+      s.timer = 25;
+      s.speed = config.fleeSpeed;
+    }
   }
 
   // ── cursor flee ──

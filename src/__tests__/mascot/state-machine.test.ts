@@ -197,6 +197,63 @@ describe('tick - click handling', () => {
     const result = tick(state, input, DEFAULT_CONFIG);
     expect(result.state.behavior).toBe('offscreen');
   });
+
+  it('5th click within decay window forces powerup', () => {
+    const state = makeState({
+      behavior: 'idle',
+      timer: 50,
+      visible: true,
+      clickCount: 4,
+      clickDecay: 30,
+    });
+    const input = makeInput({ clicked: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('powerup');
+    expect(result.state.clickCount).toBe(0);
+  });
+
+  it('emits powerup effect and saiyan-style speech on rapid click trigger', () => {
+    const state = makeState({
+      behavior: 'idle',
+      timer: 50,
+      visible: true,
+      clickCount: 4,
+      clickDecay: 30,
+    });
+    const input = makeInput({ clicked: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.effects.showPowerFx).toBe(true);
+    expect(result.effects.speech).toBe('HAAAA!!');
+  });
+
+  it('does not trigger powerup at 4 clicks', () => {
+    const state = makeState({
+      behavior: 'idle',
+      timer: 50,
+      visible: true,
+      clickCount: 3,
+      clickDecay: 30,
+    });
+    const input = makeInput({ clicked: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('fleeing');
+    expect(result.state.clickCount).toBe(4);
+  });
+
+  it('does not trigger powerup if click decay expired between taps', () => {
+    // clickCount got reset to 0 via decay; new click is the first again
+    const state = makeState({
+      behavior: 'idle',
+      timer: 50,
+      visible: true,
+      clickCount: 0,
+      clickDecay: 0,
+    });
+    const input = makeInput({ clicked: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('fleeing');
+    expect(result.state.clickCount).toBe(1);
+  });
 });
 
 describe('tick - cursor flee', () => {
