@@ -11,7 +11,13 @@ import {
   SH,
 } from '@/mascot/sprites';
 import { drawSprite } from '@/mascot/renderer';
-import type { MascotConfig, TickInput, DustParticle } from '@/mascot/types';
+import type {
+  MascotConfig,
+  MascotState,
+  TickInput,
+  DustParticle,
+  Platform,
+} from '@/mascot/types';
 
 const CONFIG: MascotConfig = {
   spriteWidth: SW * SCALE,
@@ -42,6 +48,22 @@ export default function PixelMascot() {
   const [powerPos, setPowerPos] = useState({ x: 0, y: 0 });
   const [dust, setDust] = useState<DustInstance[]>([]);
 
+  // Refs persist mascot state across route changes so the character does not
+  // disappear and reset to offscreen on every navigation.
+  const stateRef = useRef<MascotState | null>(null);
+  const platformsRef = useRef<Platform[]>([]);
+  const routeRef = useRef(location.pathname);
+
+  // Keep platforms and route in sync with the current route, without resetting
+  // the rest of the mascot state.
+  useEffect(() => {
+    routeRef.current = location.pathname;
+    platformsRef.current = getPagePlatforms(
+      location.pathname,
+      window.innerHeight,
+    );
+  }, [location.pathname]);
+
   const render = useCallback(
     (ctx: CanvasRenderingContext2D, frame: number[][], flip: boolean) => {
       const data = flip ? mirror(frame) : frame;
@@ -57,11 +79,19 @@ export default function PixelMascot() {
     if (!ctx) return;
 
     const sprW = CONFIG.spriteWidth;
-    let state = createInitialState(
-      CONFIG,
-      100 + Math.floor(Math.random() * 200),
-    );
-    let platforms = getPagePlatforms(location.pathname, window.innerHeight);
+    if (!stateRef.current) {
+      stateRef.current = createInitialState(
+        CONFIG,
+        100 + Math.floor(Math.random() * 200),
+      );
+    }
+    if (platformsRef.current.length === 0) {
+      platformsRef.current = getPagePlatforms(
+        routeRef.current,
+        window.innerHeight,
+      );
+    }
+
     let mouseX = -9999;
     let mouseY = -9999;
     let clicked = false;
@@ -84,11 +114,17 @@ export default function PixelMascot() {
     };
     const onScroll = () => {
       const y = window.scrollY;
-      scrollVelocity = y - lastScrollY;
+      // Accumulate so multiple scroll events between ticks sum up. Mobile
+      // browsers fire scroll events more frequently with smaller deltas, so
+      // replacing (instead of accumulating) would never cross the threshold.
+      scrollVelocity += y - lastScrollY;
       lastScrollY = y;
     };
     const onResize = () => {
-      platforms = getPagePlatforms(location.pathname, window.innerHeight);
+      platformsRef.current = getPagePlatforms(
+        routeRef.current,
+        window.innerHeight,
+      );
     };
 
     window.addEventListener('mousemove', onMouse);
@@ -98,18 +134,19 @@ export default function PixelMascot() {
     window.addEventListener('resize', onResize);
 
     const loop = setInterval(() => {
+      const state = stateRef.current!;
       const input: TickInput = {
         mouseX,
         mouseY,
         clicked,
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
-        platforms,
+        platforms: platformsRef.current,
         random: Math.random,
         scrollVelocity,
         userIdleTicks,
         mouseMoved,
-        route: location.pathname,
+        route: routeRef.current,
       };
       clicked = false;
       mouseMoved = false;
@@ -117,11 +154,12 @@ export default function PixelMascot() {
       userIdleTicks++;
 
       const result = tick(state, input, CONFIG);
-      state = result.state;
+      stateRef.current = result.state;
+      const next = result.state;
 
       if (result.effects.speech !== null) {
         setSpeech(result.effects.speech);
-      } else if (state.speechTimer <= 0) {
+      } else if (next.speechTimer <= 0) {
         setSpeech((prev) => (prev ? '' : prev));
       }
       setShowPowerFx(result.effects.showPowerFx);
@@ -143,21 +181,21 @@ export default function PixelMascot() {
         setDust((prev) => advanceDust(prev));
       }
 
-      if (!state.visible) {
+      if (!next.visible) {
         canvas.style.left = '-200px';
         canvas.style.top = '-200px';
         canvas.style.transform = '';
         return;
       }
 
-      canvas.style.left = `${Math.round(state.x)}px`;
-      canvas.style.top = `${Math.round(state.y)}px`;
-      canvas.style.transform = state.rotation
-        ? `rotate(${state.rotation}rad)`
+      canvas.style.left = `${Math.round(next.x)}px`;
+      canvas.style.top = `${Math.round(next.y)}px`;
+      canvas.style.transform = next.rotation
+        ? `rotate(${next.rotation}rad)`
         : '';
-      setSpeechPos({ x: state.x + sprW / 2, y: state.y - 8 });
+      setSpeechPos({ x: next.x + sprW / 2, y: next.y - 8 });
 
-      const { spriteKey, flip } = selectSprite(state);
+      const { spriteKey, flip } = selectSprite(next);
       const frame = getSpriteFrame(spriteKey);
       render(ctx, frame, flip);
     }, 1000 / FPS);
@@ -170,7 +208,7 @@ export default function PixelMascot() {
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onClick);
     };
-  }, [location.pathname, render]);
+  }, [render]);
 
   return (
     <>
