@@ -254,6 +254,32 @@ describe('tick - click handling', () => {
     expect(result.state.behavior).toBe('fleeing');
     expect(result.state.clickCount).toBe(1);
   });
+
+  it('cursor near powerup does NOT interrupt powerup with flee', () => {
+    // Sprite center at 224, 747. Mouse 250, 747 → dist 26 < 110.
+    const state = makeState({
+      behavior: 'powerup',
+      x: 200,
+      y: 714,
+      timer: 60,
+      visible: true,
+    });
+    const input = makeInput({ mouseX: 250, mouseY: 747 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('powerup');
+  });
+
+  it('click during powerup does NOT interrupt with flee', () => {
+    const state = makeState({
+      behavior: 'powerup',
+      timer: 60,
+      visible: true,
+      clickCount: 0,
+    });
+    const input = makeInput({ clicked: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('powerup');
+  });
 });
 
 describe('tick - cursor flee', () => {

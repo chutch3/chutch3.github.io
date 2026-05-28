@@ -150,7 +150,12 @@ export function tick(
   }
 
   // ── handle click/tap ──
-  if (input.clicked && s.visible && s.behavior !== 'offscreen') {
+  if (
+    input.clicked &&
+    s.visible &&
+    s.behavior !== 'offscreen' &&
+    s.behavior !== 'powerup'
+  ) {
     s.clickCount++;
     s.clickDecay = 40;
     if (s.clickCount >= CLICKS_TO_POWERUP) {
@@ -187,7 +192,8 @@ export function tick(
     s.behavior !== 'entering' &&
     s.behavior !== 'tumbling' &&
     s.behavior !== 'bored' &&
-    s.behavior !== 'startled'
+    s.behavior !== 'startled' &&
+    s.behavior !== 'powerup'
   ) {
     const cx = s.x + sprW / 2;
     const cy = s.y + sprH / 2;
