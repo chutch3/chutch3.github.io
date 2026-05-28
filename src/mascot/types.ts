@@ -8,7 +8,10 @@ export type Behavior =
   | 'powerup'
   | 'fleeing'
   | 'jumping'
-  | 'exiting';
+  | 'exiting'
+  | 'tumbling'
+  | 'bored'
+  | 'startled';
 
 export type PaletteIndex = number;
 export type SpriteFrame = PaletteIndex[][];
@@ -48,6 +51,9 @@ export interface MascotState {
   visible: boolean;
   clickCount: number;
   clickDecay: number;
+  rotation: number;
+  tumbleSpin: number;
+  justLanded: boolean;
 }
 
 export interface TickInput {
@@ -58,6 +64,18 @@ export interface TickInput {
   viewportHeight: number;
   platforms: Platform[];
   random: () => number;
+  scrollVelocity: number;
+  userIdleTicks: number;
+  mouseMoved: boolean;
+  route: string;
+}
+
+export interface DustParticle {
+  dx: number;
+  dy: number;
+  vx: number;
+  vy: number;
+  life: number;
 }
 
 export interface TickEffects {
@@ -65,6 +83,7 @@ export interface TickEffects {
   speechDuration: number;
   showPowerFx: boolean;
   powerFxPosition: { x: number; y: number } | null;
+  landingDust: { x: number; y: number; particles: DustParticle[] } | null;
 }
 
 export interface TickResult {

@@ -11,7 +11,7 @@ import {
   SH,
 } from '@/mascot/sprites';
 import { drawSprite } from '@/mascot/renderer';
-import type { MascotConfig, TickInput } from '@/mascot/types';
+import type { MascotConfig, TickInput, DustParticle } from '@/mascot/types';
 
 const CONFIG: MascotConfig = {
   spriteWidth: SW * SCALE,
@@ -25,6 +25,13 @@ const CONFIG: MascotConfig = {
 };
 
 const FPS = 20;
+const DUST_GRAVITY = 0.15;
+
+interface DustInstance extends DustParticle {
+  id: number;
+  originX: number;
+  originY: number;
+}
 
 export default function PixelMascot() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,6 +40,7 @@ export default function PixelMascot() {
   const [speechPos, setSpeechPos] = useState({ x: 0, y: 0 });
   const [showPowerFx, setShowPowerFx] = useState(false);
   const [powerPos, setPowerPos] = useState({ x: 0, y: 0 });
+  const [dust, setDust] = useState<DustInstance[]>([]);
 
   const render = useCallback(
     (ctx: CanvasRenderingContext2D, frame: number[][], flip: boolean) => {
@@ -57,13 +65,25 @@ export default function PixelMascot() {
     let mouseX = -9999;
     let mouseY = -9999;
     let clicked = false;
+    let mouseMoved = false;
+    let userIdleTicks = 0;
+    let lastScrollY = window.scrollY;
+    let scrollVelocity = 0;
+    let dustIdCounter = 0;
 
     const onMouse = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
+      mouseMoved = true;
+      userIdleTicks = 0;
     };
     const onClick = () => {
       clicked = true;
+    };
+    const onScroll = () => {
+      const y = window.scrollY;
+      scrollVelocity = y - lastScrollY;
+      lastScrollY = y;
     };
     const onResize = () => {
       platforms = getPagePlatforms(location.pathname, window.innerHeight);
@@ -72,6 +92,7 @@ export default function PixelMascot() {
     window.addEventListener('mousemove', onMouse);
     canvas.addEventListener('click', onClick);
     canvas.addEventListener('touchstart', onClick);
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
 
     const loop = setInterval(() => {
@@ -83,8 +104,15 @@ export default function PixelMascot() {
         viewportHeight: window.innerHeight,
         platforms,
         random: Math.random,
+        scrollVelocity,
+        userIdleTicks,
+        mouseMoved,
+        route: location.pathname,
       };
       clicked = false;
+      mouseMoved = false;
+      scrollVelocity = 0;
+      userIdleTicks++;
 
       const result = tick(state, input, CONFIG);
       state = result.state;
@@ -100,14 +128,32 @@ export default function PixelMascot() {
         setPowerPos(result.effects.powerFxPosition);
       }
 
+      // Spawn new dust particles and advance physics
+      if (result.effects.landingDust) {
+        const ld = result.effects.landingDust;
+        const newDust: DustInstance[] = ld.particles.map((p) => ({
+          ...p,
+          id: dustIdCounter++,
+          originX: ld.x,
+          originY: ld.y,
+        }));
+        setDust((prev) => [...advanceDust(prev), ...newDust]);
+      } else {
+        setDust((prev) => advanceDust(prev));
+      }
+
       if (!state.visible) {
         canvas.style.left = '-200px';
         canvas.style.top = '-200px';
+        canvas.style.transform = '';
         return;
       }
 
       canvas.style.left = `${Math.round(state.x)}px`;
       canvas.style.top = `${Math.round(state.y)}px`;
+      canvas.style.transform = state.rotation
+        ? `rotate(${state.rotation}rad)`
+        : '';
       setSpeechPos({ x: state.x + sprW / 2, y: state.y - 8 });
 
       const { spriteKey, flip } = selectSprite(state);
@@ -118,6 +164,7 @@ export default function PixelMascot() {
     return () => {
       clearInterval(loop);
       window.removeEventListener('mousemove', onMouse);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onClick);
@@ -161,6 +208,32 @@ export default function PixelMascot() {
           <div className="w-full h-full rounded-full bg-cyber-yellow/10 animate-ping" />
         </div>
       )}
+      {dust.map((p) => (
+        <div
+          key={p.id}
+          className="fixed z-30 pointer-events-none"
+          style={{
+            left: p.originX + p.dx,
+            top: p.originY + p.dy,
+            width: 4,
+            height: 4,
+            background: '#c8c8d0',
+            opacity: p.life / 20,
+          }}
+        />
+      ))}
     </>
   );
+}
+
+function advanceDust(particles: DustInstance[]): DustInstance[] {
+  return particles
+    .map((p) => ({
+      ...p,
+      dx: p.dx + p.vx,
+      dy: p.dy + p.vy,
+      vy: p.vy + DUST_GRAVITY,
+      life: p.life - 1,
+    }))
+    .filter((p) => p.life > 0);
 }

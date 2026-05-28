@@ -32,6 +32,10 @@ function makeInput(overrides: Partial<TickInput> = {}): TickInput {
     viewportHeight: 800,
     platforms: BASE_PLATFORMS,
     random: () => 0.5,
+    scrollVelocity: 0,
+    userIdleTicks: 0,
+    mouseMoved: false,
+    route: '/',
     ...overrides,
   };
 }
@@ -54,6 +58,9 @@ function makeState(overrides: Partial<MascotState> = {}): MascotState {
     visible: true,
     clickCount: 0,
     clickDecay: 0,
+    rotation: 0,
+    tumbleSpin: 0,
+    justLanded: false,
     ...overrides,
   };
 }
@@ -648,5 +655,304 @@ describe('selectSprite', () => {
     expect(
       selectSprite(makeState({ behavior: 'powerup', tick: 4 })).spriteKey,
     ).toBe('stand');
+  });
+});
+
+describe('tick - scroll tumble', () => {
+  it('triggers tumbling when scroll velocity exceeds threshold', () => {
+    const state = makeState({ behavior: 'idle', timer: 50 });
+    const input = makeInput({ scrollVelocity: 50 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('tumbling');
+    expect(result.state.tumbleSpin).toBeGreaterThan(0);
+    expect(result.state.direction).toBe(1);
+  });
+
+  it('does not tumble below threshold', () => {
+    const state = makeState({ behavior: 'idle', timer: 50 });
+    const input = makeInput({ scrollVelocity: 20 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('idle');
+  });
+
+  it('does not tumble during jumping', () => {
+    const state = makeState({
+      behavior: 'jumping',
+      jumpVy: -5,
+      jumpTargetPlat: 1,
+      jumpTargetX: 500,
+    });
+    const input = makeInput({ scrollVelocity: 100 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('jumping');
+  });
+
+  it('does not tumble while offscreen', () => {
+    const state = makeState({
+      behavior: 'offscreen',
+      visible: false,
+      timer: 100,
+    });
+    const input = makeInput({ scrollVelocity: 100 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('offscreen');
+  });
+
+  it('accumulates rotation each tick while tumbling', () => {
+    const state = makeState({
+      behavior: 'tumbling',
+      tumbleSpin: 0.25,
+      timer: 10,
+      rotation: 0,
+    });
+    const r1 = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(r1.state.rotation).toBeCloseTo(0.25);
+    const r2 = tick(r1.state, makeInput(), DEFAULT_CONFIG);
+    expect(r2.state.rotation).toBeCloseTo(0.5);
+  });
+
+  it('returns to idle and resets rotation when tumble timer expires', () => {
+    const state = makeState({
+      behavior: 'tumbling',
+      tumbleSpin: 0.25,
+      timer: 1,
+      rotation: 7,
+    });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('idle');
+    expect(result.state.rotation).toBe(0);
+    expect(result.state.tumbleSpin).toBe(0);
+  });
+
+  it('negative scrollVelocity tumbles in opposite direction', () => {
+    const state = makeState({ behavior: 'idle', timer: 50 });
+    const input = makeInput({ scrollVelocity: -50 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('tumbling');
+    expect(result.state.tumbleSpin).toBeLessThan(0);
+    expect(result.state.direction).toBe(-1);
+  });
+
+  it('selectSprite returns walk frames for tumbling', () => {
+    const result = selectSprite(makeState({ behavior: 'tumbling', tick: 0 }));
+    expect(['walkR', 'walkL', 'stand']).toContain(result.spriteKey);
+  });
+});
+
+describe('tick - idle awareness', () => {
+  it('transitions idle to bored when userIdleTicks reaches threshold', () => {
+    const state = makeState({ behavior: 'idle', timer: 50, visible: true });
+    const input = makeInput({ userIdleTicks: 600 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('bored');
+    expect(result.effects.speech).toBe('yawn~');
+  });
+
+  it('does not trigger bored below threshold', () => {
+    const state = makeState({ behavior: 'idle', timer: 50 });
+    const input = makeInput({ userIdleTicks: 100 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('idle');
+  });
+
+  it('bored progresses to sleeping when timer drops to 200', () => {
+    const state = makeState({ behavior: 'bored', timer: 201 });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('sleeping');
+  });
+
+  it('mouseMoved while bored triggers startled with !?', () => {
+    const state = makeState({ behavior: 'bored', timer: 400 });
+    const input = makeInput({ mouseMoved: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('startled');
+    expect(result.effects.speech).toBe('!?');
+  });
+
+  it('mouseMoved while sleeping triggers startled', () => {
+    const state = makeState({ behavior: 'sleeping', timer: 100 });
+    const input = makeInput({ mouseMoved: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('startled');
+  });
+
+  it('mouseMoved while walking does NOT trigger startled', () => {
+    const state = makeState({ behavior: 'walking', timer: 50 });
+    const input = makeInput({ mouseMoved: true });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('walking');
+  });
+
+  it('startled returns to idle after timer expires', () => {
+    const state = makeState({
+      behavior: 'startled',
+      timer: 1,
+      y: 714,
+      jumpVy: 0,
+    });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('idle');
+  });
+
+  it('selectSprite returns sit for bored once timer is low', () => {
+    const result = selectSprite(makeState({ behavior: 'bored', timer: 100 }));
+    expect(result.spriteKey).toBe('sit');
+  });
+
+  it('selectSprite returns a sprite for startled', () => {
+    const result = selectSprite(makeState({ behavior: 'startled' }));
+    expect(['wave1', 'stand']).toContain(result.spriteKey);
+  });
+});
+
+describe('tick - route reactions', () => {
+  // roll=0.3 (idle branch), idleTimer=0.5, routeRoll=0.1 (< 0.6, use route), routeIdx=0
+  const ANIME_SPEECH = ['popcorn time', '🍿 sugoi', 'tier 1 waifu'];
+  const RESUME_SPEECH = ['impressive', '10/10', 'hired'];
+  const PRIVACY_SPEECH = ["they're watching...", 'shhh', '*paranoid*'];
+
+  it('on /anime uses anime route speech when idle roll fires', () => {
+    let i = 0;
+    const randoms = [0.3, 0.5, 0.1, 0];
+    const input = makeInput({
+      random: () => randoms[i++] ?? 0.5,
+      route: '/anime',
+    });
+    const state = makeState({ behavior: 'idle', timer: 1 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(ANIME_SPEECH).toContain(result.effects.speech);
+  });
+
+  it('on /resume uses resume route speech', () => {
+    let i = 0;
+    const randoms = [0.3, 0.5, 0.1, 0];
+    const input = makeInput({
+      random: () => randoms[i++] ?? 0.5,
+      route: '/resume',
+    });
+    const state = makeState({ behavior: 'idle', timer: 1 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(RESUME_SPEECH).toContain(result.effects.speech);
+  });
+
+  it('on /privacy uses privacy route speech', () => {
+    let i = 0;
+    const randoms = [0.3, 0.5, 0.1, 0];
+    const input = makeInput({
+      random: () => randoms[i++] ?? 0.5,
+      route: '/privacy',
+    });
+    const state = makeState({ behavior: 'idle', timer: 1 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(PRIVACY_SPEECH).toContain(result.effects.speech);
+  });
+
+  it('falls back to generic speech on unknown route', () => {
+    // roll=0.3 idle branch, idleTimer=0.5, speechChance=0.2 (<0.35), speechIdx=0
+    let i = 0;
+    const randoms = [0.3, 0.5, 0.2, 0];
+    const input = makeInput({
+      random: () => randoms[i++] ?? 0.5,
+      route: '/',
+    });
+    const state = makeState({ behavior: 'idle', timer: 1 });
+    const result = tick(state, input, DEFAULT_CONFIG);
+    expect(result.effects.speech).toBe('こんにちは!');
+  });
+
+  it('on /privacy swivels direction during speech timer', () => {
+    const s1 = makeState({
+      behavior: 'idle',
+      timer: 50,
+      speechTimer: 30,
+      direction: 1,
+      tick: 0,
+    });
+    const r1 = tick(s1, makeInput({ route: '/privacy' }), DEFAULT_CONFIG);
+    // tick becomes 1; 1 % 8 < 4 → direction = 1
+    expect(r1.state.direction).toBe(1);
+
+    const s2 = makeState({
+      behavior: 'idle',
+      timer: 50,
+      speechTimer: 30,
+      direction: 1,
+      tick: 4,
+    });
+    const r2 = tick(s2, makeInput({ route: '/privacy' }), DEFAULT_CONFIG);
+    // tick becomes 5; 5 % 8 >= 4 → direction = -1
+    expect(r2.state.direction).toBe(-1);
+  });
+});
+
+describe('tick - landing dust', () => {
+  it('emits dust particles on jump landing', () => {
+    const state = makeState({
+      behavior: 'jumping',
+      jumpVy: 5,
+      jumpTargetPlat: 0,
+      jumpTargetX: 500,
+      y: 713,
+      x: 490,
+      platform: 1,
+    });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.state.behavior).toBe('idle');
+    expect(result.effects.landingDust).not.toBeNull();
+    expect(result.effects.landingDust!.particles).toHaveLength(5);
+  });
+
+  it('does not emit dust on subsequent ticks after landing', () => {
+    const state = makeState({
+      behavior: 'idle',
+      justLanded: false,
+      timer: 30,
+    });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.effects.landingDust).toBeNull();
+  });
+
+  it('dust position is centered under sprite at final landing position', () => {
+    const state = makeState({
+      behavior: 'jumping',
+      jumpVy: 5,
+      jumpTargetPlat: 0,
+      jumpTargetX: 500,
+      y: 713,
+      x: 490,
+      platform: 1,
+    });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    const dust = result.effects.landingDust!;
+    expect(dust.x).toBeCloseTo(result.state.x + DEFAULT_CONFIG.spriteWidth / 2);
+    expect(dust.y).toBeCloseTo(result.state.y + DEFAULT_CONFIG.spriteHeight);
+  });
+
+  it('does not emit dust when still falling but not at platform', () => {
+    const state = makeState({
+      behavior: 'jumping',
+      jumpVy: -3,
+      jumpTargetPlat: 0,
+      jumpTargetX: 500,
+      y: 600,
+      x: 490,
+      platform: 1,
+    });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.effects.landingDust).toBeNull();
+  });
+
+  it('clears justLanded after dust emission', () => {
+    const state = makeState({
+      behavior: 'jumping',
+      jumpVy: 5,
+      jumpTargetPlat: 0,
+      jumpTargetX: 500,
+      y: 713,
+      x: 490,
+      platform: 1,
+    });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.state.justLanded).toBe(false);
   });
 });

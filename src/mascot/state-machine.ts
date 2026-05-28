@@ -6,6 +6,7 @@ import type {
   TickResult,
   SpriteKey,
   Platform,
+  DustParticle,
 } from './types';
 
 const SPEECH = [
@@ -27,6 +28,31 @@ const SPEECH = [
 ];
 
 const CLICK_SPEECH = ['NANI?!', 'oi!', 'やめて!', '(╯°□°)╯', 'hey!!', '!?'];
+
+const ROUTE_SPEECH: Record<string, string[]> = {
+  '/anime': ['popcorn time', '🍿 sugoi', 'tier 1 waifu'],
+  '/resume': ['impressive', '10/10', 'hired'],
+  '/privacy': ["they're watching...", 'shhh', '*paranoid*'],
+  '/projects': ['neat!', '*points*', 'cool stuff'],
+};
+
+function getRouteSpeech(
+  route: string,
+  random: () => number,
+): { speech: string } | null {
+  const lines = ROUTE_SPEECH[route];
+  if (!lines) return null;
+  if (random() < 0.6) {
+    return { speech: lines[Math.floor(random() * lines.length)] };
+  }
+  return null;
+}
+
+const TUMBLE_SCROLL_THRESHOLD = 30;
+const TUMBLE_SPIN = 0.25;
+const TUMBLE_DURATION = 30;
+const BORED_THRESHOLD = 600;
+const BORED_TO_SLEEP_TIMER = 200;
 
 function platY(p: Platform, vh: number, sprH: number): number {
   return vh - p.y - sprH;
@@ -61,6 +87,9 @@ export function createInitialState(
     visible: false,
     clickCount: 0,
     clickDecay: 0,
+    rotation: 0,
+    tumbleSpin: 0,
+    justLanded: false,
   };
 }
 
@@ -82,12 +111,40 @@ export function tick(
     speechDuration: 0,
     showPowerFx: false,
     powerFxPosition: null,
+    landingDust: null,
   };
 
   // ── click decay ──
   if (s.clickDecay > 0) {
     s.clickDecay--;
     if (s.clickDecay <= 0) s.clickCount = 0;
+  }
+
+  // ── idle awareness: mouseMove startle edge ──
+  if (
+    input.mouseMoved &&
+    s.visible &&
+    (s.behavior === 'bored' || s.behavior === 'sleeping')
+  ) {
+    s.behavior = 'startled';
+    s.timer = 25;
+    effects.speech = '!?';
+    effects.speechDuration = 30;
+    s.speechTimer = 30;
+    s.jumpVy = -4;
+  }
+
+  // ── idle awareness: long idle triggers bored ──
+  if (
+    input.userIdleTicks >= BORED_THRESHOLD &&
+    s.behavior === 'idle' &&
+    s.visible
+  ) {
+    s.behavior = 'bored';
+    s.timer = 600;
+    effects.speech = 'yawn~';
+    effects.speechDuration = 40;
+    s.speechTimer = 40;
   }
 
   // ── handle click/tap ──
@@ -110,7 +167,10 @@ export function tick(
     s.behavior !== 'jumping' &&
     s.behavior !== 'offscreen' &&
     s.behavior !== 'exiting' &&
-    s.behavior !== 'entering'
+    s.behavior !== 'entering' &&
+    s.behavior !== 'tumbling' &&
+    s.behavior !== 'bored' &&
+    s.behavior !== 'startled'
   ) {
     const cx = s.x + sprW / 2;
     const cy = s.y + sprH / 2;
@@ -124,12 +184,32 @@ export function tick(
     }
   }
 
+  // ── scroll tumble ──
+  if (
+    s.visible &&
+    s.behavior !== 'tumbling' &&
+    s.behavior !== 'offscreen' &&
+    s.behavior !== 'entering' &&
+    s.behavior !== 'exiting' &&
+    s.behavior !== 'jumping' &&
+    Math.abs(input.scrollVelocity) > TUMBLE_SCROLL_THRESHOLD
+  ) {
+    s.behavior = 'tumbling';
+    s.timer = TUMBLE_DURATION;
+    s.tumbleSpin = input.scrollVelocity > 0 ? TUMBLE_SPIN : -TUMBLE_SPIN;
+    s.direction = input.scrollVelocity > 0 ? 1 : -1;
+    s.speed = config.walkSpeed * 1.5;
+  }
+
   // ── behavior timer ──
   if (
     s.behavior !== 'jumping' &&
     s.behavior !== 'offscreen' &&
     s.behavior !== 'entering' &&
-    s.behavior !== 'exiting'
+    s.behavior !== 'exiting' &&
+    s.behavior !== 'tumbling' &&
+    s.behavior !== 'bored' &&
+    s.behavior !== 'startled'
   ) {
     s.timer--;
     if (s.timer <= 0) {
@@ -144,7 +224,12 @@ export function tick(
       } else if (roll < 0.38) {
         s.behavior = 'idle';
         s.timer = 60 + input.random() * 100;
-        if (input.random() < 0.35) {
+        const routeReact = getRouteSpeech(input.route, input.random);
+        if (routeReact) {
+          effects.speech = routeReact.speech;
+          effects.speechDuration = 60;
+          s.speechTimer = 60;
+        } else if (input.random() < 0.35) {
           const speechIdx = Math.floor(input.random() * SPEECH.length);
           effects.speech = SPEECH[speechIdx];
           effects.speechDuration = 60;
@@ -251,6 +336,29 @@ export function tick(
     }
   }
 
+  // ── tumble physics ──
+  if (s.behavior === 'tumbling') {
+    s.rotation += s.tumbleSpin;
+    s.x += s.direction * s.speed;
+    const l = platL(curPlat, cw);
+    const r = platR(curPlat, cw, sprW);
+    if (s.x < l) {
+      s.x = l;
+      s.direction = 1;
+    }
+    if (s.x > r) {
+      s.x = r;
+      s.direction = -1;
+    }
+    s.timer--;
+    if (s.timer <= 0) {
+      s.behavior = 'idle';
+      s.timer = 30;
+      s.rotation = 0;
+      s.tumbleSpin = 0;
+    }
+  }
+
   // ── jump physics ──
   if (s.behavior === 'jumping') {
     const tp = platforms[s.jumpTargetPlat];
@@ -266,6 +374,33 @@ export function tick(
       s.behavior = 'idle';
       s.timer = 20 + input.random() * 40;
       s.jumpVy = 0;
+      s.justLanded = true;
+    }
+  }
+
+  // ── bored progression ──
+  if (s.behavior === 'bored') {
+    s.timer--;
+    if (s.timer <= BORED_TO_SLEEP_TIMER) {
+      s.behavior = 'sleeping';
+      s.sleepBubbleGrow = 0;
+      s.timer = 200;
+    }
+  }
+
+  // ── startled hop ──
+  if (s.behavior === 'startled') {
+    s.y += s.jumpVy;
+    s.jumpVy += config.gravity;
+    s.timer--;
+    const ty = platY(curPlat, vh, sprH);
+    if (s.jumpVy > 0 && s.y >= ty) {
+      s.y = ty;
+      s.jumpVy = 0;
+    }
+    if (s.timer <= 0) {
+      s.behavior = 'idle';
+      s.timer = 40;
     }
   }
 
@@ -287,12 +422,43 @@ export function tick(
     s.speechTimer--;
   }
 
+  // ── privacy paranoia: swivel head during speech ──
+  if (
+    input.route === '/privacy' &&
+    s.behavior === 'idle' &&
+    s.speechTimer > 0
+  ) {
+    s.direction = s.tick % 8 < 4 ? 1 : -1;
+  }
+
   // ── powerup fx ──
   if (s.behavior === 'powerup') {
     effects.showPowerFx = true;
     if (!effects.powerFxPosition) {
       effects.powerFxPosition = { x: s.x, y: s.y };
     }
+  }
+
+  // ── landing dust emission ──
+  if (s.justLanded) {
+    const particles: DustParticle[] = [];
+    for (let p = 0; p < 5; p++) {
+      const angle = input.random() * Math.PI;
+      const speed = 0.6 + input.random() * 0.8;
+      particles.push({
+        dx: 0,
+        dy: 0,
+        vx: Math.cos(angle) * speed * (input.random() < 0.5 ? -1 : 1),
+        vy: -Math.abs(Math.sin(angle)) * speed,
+        life: 20,
+      });
+    }
+    effects.landingDust = {
+      x: s.x + config.spriteWidth / 2,
+      y: s.y + config.spriteHeight,
+      particles,
+    };
+    s.justLanded = false;
   }
 
   return { state: s, effects };
@@ -325,6 +491,16 @@ export function selectSprite(state: MascotState): {
         spriteKey: state.tick % 4 < 2 ? 'stand' : 'walkR',
         flip,
       };
+    case 'tumbling':
+      return { spriteKey: state.tick % 6 < 3 ? 'walkR' : 'walkL', flip };
+    case 'bored':
+      if (state.timer > 480) {
+        return { spriteKey: state.tick % 16 < 8 ? 'stand' : 'walkR', flip };
+      }
+      if (state.timer > 360) return { spriteKey: 'stand', flip };
+      return { spriteKey: 'sit', flip };
+    case 'startled':
+      return { spriteKey: 'wave1', flip };
     default:
       return { spriteKey: 'stand', flip };
   }
