@@ -79,6 +79,8 @@ export default function PixelMascot() {
     };
     const onClick = () => {
       clicked = true;
+      mouseMoved = true;
+      userIdleTicks = 0;
     };
     const onScroll = () => {
       const y = window.scrollY;
@@ -119,9 +121,8 @@ export default function PixelMascot() {
 
       if (result.effects.speech !== null) {
         setSpeech(result.effects.speech);
-      }
-      if (state.speechTimer <= 0 && speech) {
-        setSpeech('');
+      } else if (state.speechTimer <= 0) {
+        setSpeech((prev) => (prev ? '' : prev));
       }
       setShowPowerFx(result.effects.showPowerFx);
       if (result.effects.powerFxPosition) {
@@ -169,7 +170,7 @@ export default function PixelMascot() {
       canvas.removeEventListener('click', onClick);
       canvas.removeEventListener('touchstart', onClick);
     };
-  }, [location.pathname, render, speech]);
+  }, [location.pathname, render]);
 
   return (
     <>
