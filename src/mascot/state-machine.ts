@@ -112,6 +112,7 @@ export function tick(
     showPowerFx: false,
     powerFxPosition: null,
     landingDust: null,
+    powerUpParticles: null,
   };
 
   // ── click decay ──
@@ -437,6 +438,19 @@ export function tick(
     if (!effects.powerFxPosition) {
       effects.powerFxPosition = { x: s.x, y: s.y };
     }
+    // Emit rising energy particles each tick during powerup.
+    const particles: DustParticle[] = [];
+    for (let p = 0; p < 3; p++) {
+      const spread = (input.random() - 0.5) * config.spriteWidth;
+      const vx = (input.random() - 0.5) * 0.4;
+      const vy = -(1.5 + input.random() * 1.5);
+      particles.push({ dx: spread, dy: 0, vx, vy, life: 18 });
+    }
+    effects.powerUpParticles = {
+      x: s.x + config.spriteWidth / 2,
+      y: s.y + config.spriteHeight,
+      particles,
+    };
   }
 
   // ── landing dust emission ──
@@ -487,10 +501,7 @@ export function selectSprite(state: MascotState): {
     case 'sleeping':
       return { spriteKey: 'sit', flip };
     case 'powerup':
-      return {
-        spriteKey: state.tick % 4 < 2 ? 'stand' : 'walkR',
-        flip,
-      };
+      return { spriteKey: 'saiyan', flip };
     case 'tumbling':
       return { spriteKey: state.tick % 6 < 3 ? 'walkR' : 'walkL', flip };
     case 'bored':

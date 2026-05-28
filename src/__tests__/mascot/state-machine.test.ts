@@ -645,16 +645,13 @@ describe('selectSprite', () => {
     );
   });
 
-  it('alternates stand/walkR for powerup', () => {
+  it('uses saiyan sprite for powerup', () => {
     expect(
       selectSprite(makeState({ behavior: 'powerup', tick: 0 })).spriteKey,
-    ).toBe('stand');
+    ).toBe('saiyan');
     expect(
       selectSprite(makeState({ behavior: 'powerup', tick: 2 })).spriteKey,
-    ).toBe('walkR');
-    expect(
-      selectSprite(makeState({ behavior: 'powerup', tick: 4 })).spriteKey,
-    ).toBe('stand');
+    ).toBe('saiyan');
   });
 });
 
@@ -954,5 +951,36 @@ describe('tick - landing dust', () => {
     });
     const result = tick(state, makeInput(), DEFAULT_CONFIG);
     expect(result.state.justLanded).toBe(false);
+  });
+});
+
+describe('tick - powerup particles', () => {
+  it('emits rising energy particles while powering up', () => {
+    const state = makeState({ behavior: 'powerup', timer: 50 });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.effects.powerUpParticles).not.toBeNull();
+    expect(result.effects.powerUpParticles!.particles.length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it('does not emit powerup particles when not in powerup', () => {
+    const state = makeState({ behavior: 'idle', timer: 50 });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    expect(result.effects.powerUpParticles).toBeNull();
+  });
+
+  it('powerup particles rise (negative vy)', () => {
+    const state = makeState({ behavior: 'powerup', timer: 50 });
+    const result = tick(state, makeInput(), DEFAULT_CONFIG);
+    const particles = result.effects.powerUpParticles!.particles;
+    for (const p of particles) {
+      expect(p.vy).toBeLessThan(0);
+    }
+  });
+
+  it('selectSprite returns saiyan for powerup', () => {
+    const result = selectSprite(makeState({ behavior: 'powerup', tick: 0 }));
+    expect(result.spriteKey).toBe('saiyan');
   });
 });

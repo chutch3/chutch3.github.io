@@ -8,6 +8,7 @@ const C = 4;
 const B = 5;
 const A = 6;
 const W = 7;
+const Y = 8;
 
 export const PALETTE: Record<number, string> = {
   [P]: '',
@@ -18,6 +19,7 @@ export const PALETTE: Record<number, string> = {
   [B]: '#12121a',
   [A]: '#ff2d7b',
   [W]: '#c8c8d0',
+  [Y]: '#f5ff00',
 };
 
 export const SCALE = 3;
@@ -103,7 +105,39 @@ export const WALK_L: SpriteFrame = [
 ];
 
 /* prettier-ignore */
+export const SAIYAN: SpriteFrame = [
+  [P,P,Y,P,P,P,Y,P,P,P,Y,P,P,Y,P,P],
+  [P,P,P,Y,P,Y,P,P,Y,P,P,P,Y,P,P,P],
+  [P,P,P,P,Y,Y,Y,Y,Y,Y,Y,Y,P,P,P,P],
+  [P,P,P,Y,Y,Y,Y,Y,Y,Y,Y,Y,Y,P,P,P],
+  [P,P,P,K,Y,Y,Y,Y,Y,Y,Y,Y,K,P,P,P],
+  [P,P,P,S,S,K,S,S,S,K,S,S,S,P,P,P],
+  [P,P,P,S,S,S,S,S,S,S,S,S,S,P,P,P],
+  [P,P,P,S,S,S,S,A,S,S,S,S,S,P,P,P],
+  [P,P,P,P,K,S,S,S,S,S,K,P,P,P,P,P],
+  [P,P,S,P,K,C,C,C,C,C,K,P,S,P,P,P],
+  [P,S,P,K,C,C,C,C,C,C,C,K,P,S,P,P],
+  [P,S,P,K,C,C,C,C,C,C,C,K,P,S,P,P],
+  [P,P,S,K,C,C,C,C,C,C,C,K,S,P,P,P],
+  [P,P,P,K,C,C,C,C,C,C,C,K,P,P,P,P],
+  [P,P,P,P,K,C,C,C,C,C,K,P,P,P,P,P],
+  [P,P,P,P,P,K,C,C,C,K,P,P,P,P,P,P],
+  [P,P,P,P,P,K,C,P,C,K,P,P,P,P,P,P],
+  [P,P,P,P,P,K,C,P,C,K,P,P,P,P,P,P],
+  [P,P,P,P,P,B,C,P,C,B,P,P,P,P,P,P],
+  [P,P,P,P,P,K,W,P,W,K,P,P,P,P,P,P],
+  [P,P,P,P,P,K,W,P,W,K,P,P,P,P,P,P],
+  [P,P,P,P,K,K,K,P,K,K,K,P,P,P,P,P],
+];
+
+/* prettier-ignore */
 export const SIT: SpriteFrame = [
+  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
+  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
+  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
+  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
+  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
+  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
   [P,P,P,P,P,H,H,H,H,H,H,P,P,P,P,P],
   [P,P,P,P,H,H,H,H,H,H,H,H,P,P,P,P],
   [P,P,P,H,H,H,H,H,H,H,H,H,H,P,P,P],
@@ -111,19 +145,13 @@ export const SIT: SpriteFrame = [
   [P,P,P,K,S,S,S,S,S,S,S,S,K,P,P,P],
   [P,P,P,S,S,K,S,S,S,K,S,S,S,P,P,P],
   [P,P,P,S,S,S,S,S,S,S,S,S,S,P,P,P],
-  [P,P,P,S,S,S,S,S,S,S,S,S,S,P,P,P],
+  [P,P,P,S,S,S,S,A,S,S,S,S,S,P,P,P],
   [P,P,P,P,K,S,S,S,S,S,K,P,P,P,P,P],
-  [P,P,P,P,P,K,C,C,C,K,P,P,P,P,P,P],
-  [P,P,P,P,K,C,C,C,C,C,K,P,P,P,P,P],
-  [P,P,P,S,K,C,C,C,C,C,K,S,P,P,P,P],
-  [P,P,P,S,K,C,C,C,C,C,K,S,P,P,P,P],
-  [P,P,P,P,P,K,C,C,C,K,P,P,P,P,P,P],
-  [P,P,P,P,K,C,C,C,C,C,K,P,P,P,P,P],
-  [P,P,P,K,W,C,C,C,C,C,W,K,P,P,P,P],
-  [P,P,P,K,W,W,W,P,W,W,W,K,P,P,P,P],
-  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
-  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
-  [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
+  [P,P,S,P,K,C,C,C,C,C,K,P,S,P,P,P],
+  [P,S,P,P,K,C,C,C,C,C,K,P,P,S,P,P],
+  [P,P,P,K,C,C,C,C,C,C,C,K,P,P,P,P],
+  [P,P,K,W,W,W,W,P,W,W,W,W,K,P,P,P],
+  [P,P,K,K,K,K,K,P,K,K,K,K,K,P,P,P],
   [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
   [P,P,P,P,P,P,P,P,P,P,P,P,P,P,P,P],
 ];
@@ -221,6 +249,7 @@ const SPRITE_MAP: Record<SpriteKey, SpriteFrame> = {
   sit: SIT,
   wave1: WAVE_1,
   wave2: WAVE_2,
+  saiyan: SAIYAN,
 };
 
 export function getSpriteFrame(key: SpriteKey): SpriteFrame {

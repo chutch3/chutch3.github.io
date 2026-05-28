@@ -15,7 +15,14 @@ export type Behavior =
 
 export type PaletteIndex = number;
 export type SpriteFrame = PaletteIndex[][];
-export type SpriteKey = 'stand' | 'walkR' | 'walkL' | 'sit' | 'wave1' | 'wave2';
+export type SpriteKey =
+  | 'stand'
+  | 'walkR'
+  | 'walkL'
+  | 'sit'
+  | 'wave1'
+  | 'wave2'
+  | 'saiyan';
 
 export interface Platform {
   y: number;
@@ -84,6 +91,11 @@ export interface TickEffects {
   showPowerFx: boolean;
   powerFxPosition: { x: number; y: number } | null;
   landingDust: { x: number; y: number; particles: DustParticle[] } | null;
+  powerUpParticles: {
+    x: number;
+    y: number;
+    particles: DustParticle[];
+  } | null;
 }
 
 export interface TickResult {

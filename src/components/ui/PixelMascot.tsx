@@ -32,8 +32,16 @@ const CONFIG: MascotConfig = {
 
 const FPS = 20;
 const DUST_GRAVITY = 0.15;
+const ENERGY_DECAY_VY = -0.02;
+const POWERUP_PARTICLE_LIMIT = 80;
 
 interface DustInstance extends DustParticle {
+  id: number;
+  originX: number;
+  originY: number;
+}
+
+interface EnergyInstance extends DustParticle {
   id: number;
   originX: number;
   originY: number;
@@ -47,6 +55,7 @@ export default function PixelMascot() {
   const [showPowerFx, setShowPowerFx] = useState(false);
   const [powerPos, setPowerPos] = useState({ x: 0, y: 0 });
   const [dust, setDust] = useState<DustInstance[]>([]);
+  const [energy, setEnergy] = useState<EnergyInstance[]>([]);
 
   // Refs persist mascot state across route changes so the character does not
   // disappear and reset to offscreen on every navigation.
@@ -100,6 +109,7 @@ export default function PixelMascot() {
     let lastScrollY = window.scrollY;
     let scrollVelocity = 0;
     let dustIdCounter = 0;
+    let energyIdCounter = 0;
 
     const onMouse = (e: MouseEvent) => {
       mouseX = e.clientX;
@@ -181,6 +191,22 @@ export default function PixelMascot() {
         setDust((prev) => advanceDust(prev));
       }
 
+      // Spawn/advance powerup energy particles
+      if (result.effects.powerUpParticles) {
+        const up = result.effects.powerUpParticles;
+        const newEnergy: EnergyInstance[] = up.particles.map((p) => ({
+          ...p,
+          id: energyIdCounter++,
+          originX: up.x,
+          originY: up.y,
+        }));
+        setEnergy((prev) =>
+          [...advanceEnergy(prev), ...newEnergy].slice(-POWERUP_PARTICLE_LIMIT),
+        );
+      } else {
+        setEnergy((prev) => advanceEnergy(prev));
+      }
+
       if (!next.visible) {
         canvas.style.left = '-200px';
         canvas.style.top = '-200px';
@@ -235,18 +261,53 @@ export default function PixelMascot() {
         </div>
       )}
       {showPowerFx && (
+        <>
+          <div
+            className="fixed z-20 pointer-events-none"
+            style={{
+              left: powerPos.x - 30,
+              top: powerPos.y - 30,
+              width: SW * SCALE + 60,
+              height: SH * SCALE + 60,
+            }}
+          >
+            <div
+              className="absolute inset-0 rounded-full animate-ping"
+              style={{
+                background:
+                  'radial-gradient(circle, rgba(245,255,0,0.35), rgba(255,45,123,0.15) 60%, transparent 75%)',
+              }}
+            />
+          </div>
+          <div
+            className="fixed z-20 pointer-events-none"
+            style={{
+              left: powerPos.x + (SW * SCALE) / 2 - 1,
+              top: powerPos.y + SH * SCALE - 2,
+              width: 2,
+              height: 800,
+              background:
+                'linear-gradient(to top, rgba(245,255,0,0.7), rgba(255,45,123,0.3) 30%, transparent 70%)',
+              filter: 'blur(1px)',
+            }}
+          />
+        </>
+      )}
+      {energy.map((p) => (
         <div
+          key={p.id}
           className="fixed z-30 pointer-events-none"
           style={{
-            left: powerPos.x - 10,
-            top: powerPos.y - 10,
-            width: SW * SCALE + 20,
-            height: SH * SCALE + 20,
+            left: p.originX + p.dx,
+            top: p.originY + p.dy,
+            width: 3,
+            height: 6 + Math.max(0, 18 - p.life),
+            background: '#f5ff00',
+            boxShadow: '0 0 4px #f5ff00, 0 0 8px #ff2d7b',
+            opacity: Math.min(1, p.life / 12),
           }}
-        >
-          <div className="w-full h-full rounded-full bg-cyber-yellow/10 animate-ping" />
-        </div>
-      )}
+        />
+      ))}
       {dust.map((p) => (
         <div
           key={p.id}
@@ -272,6 +333,19 @@ function advanceDust(particles: DustInstance[]): DustInstance[] {
       dx: p.dx + p.vx,
       dy: p.dy + p.vy,
       vy: p.vy + DUST_GRAVITY,
+      life: p.life - 1,
+    }))
+    .filter((p) => p.life > 0);
+}
+
+function advanceEnergy(particles: EnergyInstance[]): EnergyInstance[] {
+  // Rising particles accelerate slightly upward then fade.
+  return particles
+    .map((p) => ({
+      ...p,
+      dx: p.dx + p.vx,
+      dy: p.dy + p.vy,
+      vy: p.vy + ENERGY_DECAY_VY,
       life: p.life - 1,
     }))
     .filter((p) => p.life > 0);
