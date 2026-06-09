@@ -225,11 +225,11 @@ export const siteConfig = {
       github: 'https://github.com/chutch3/real-estate-agent-tools',
     },
     {
-      title: 'Tranga (Fork)',
+      title: 'Kenku',
       description:
-        'Improvements to Tranga — a manga monitoring and download tool. Contributions include async connector refactoring, worker concurrency improvements, search relevance fixes, and migration hardening.',
+        'Self-hosted manga & comic downloader (API + web UI). Diverged fork of Tranga, merged into a monorepo.',
       tech: ['C#', 'Docker', '.NET'],
-      github: 'https://github.com/chutch3/tranga',
+      github: 'https://github.com/chutch3/kenku',
     },
   ] satisfies Project[],
 
