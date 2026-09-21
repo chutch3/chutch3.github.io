@@ -43,7 +43,7 @@ export const siteConfig = {
 
   // ─── Homelab Status ───────────────────────────────────────
   homelab: {
-    statusUrl: 'https://nas.tail91877.ts.net:8443/public-status/status.json',
+    statusUrl: 'https://nas.tail91877.ts.net/public-status/status.json',
   },
 
   // ─── Features (toggle on/off) ────────────────────────────
