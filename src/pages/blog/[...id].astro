@@ -1,0 +1,57 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getPosts, formatDate } from '@/lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+>
+  <article class="py-24 px-6 glow-cyan noise-bg">
+    <div class="max-w-3xl mx-auto">
+      <a
+        href="/blog/"
+        class="font-mono text-xs text-cyber-muted hover:text-cyber-cyan"
+      >
+        ← cd ../blog
+      </a>
+      <header class="mt-6 mb-10">
+        <h1
+          class="font-heading text-3xl md:text-4xl font-bold text-cyber-cyan tracking-wide"
+        >
+          {post.data.title}
+        </h1>
+        <p class="font-mono text-xs text-cyber-muted mt-3">
+          <time datetime={post.data.date.toISOString()}>
+            {formatDate(post.data.date)}
+          </time>
+          {post.data.tags.map((tag) => <span class="ml-3">#{tag}</span>)}
+        </p>
+        <div
+          class="mt-4 h-px w-24 bg-gradient-to-r from-cyber-cyan via-cyber-pink to-transparent"
+        >
+        </div>
+      </header>
+      <div
+        class="prose prose-invert max-w-none prose-headings:font-heading prose-headings:text-cyber-text prose-a:text-cyber-cyan prose-code:text-cyber-pink prose-code:before:content-none prose-code:after:content-none prose-pre:bg-cyber-surface prose-pre:border prose-pre:border-cyber-border"
+      >
+        <Content />
+      </div>
+      <p class="font-mono text-xs text-cyber-muted mt-16">
+        Follow along via <a href="/rss.xml" class="text-cyber-cyan hover:neon-cyan"
+          >RSS</a
+        >.
+      </p>
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,14 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Homelab from '@/components/sections/Homelab';
+import { siteConfig } from '@/config/site.config';
+
+if (!siteConfig.features.homelabPage) return Astro.redirect('/');
+---
+
+<BaseLayout
+  title="Homelab"
+  description="Cody Hutchens' homelab: a Docker Swarm platform managed with Ansible, running 30+ self-hosted services, with live status."
+>
+  <Homelab client:load />
+</BaseLayout>

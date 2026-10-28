@@ -1,0 +1,11 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import About from '@/components/sections/About';
+---
+
+<BaseLayout
+  title="About"
+  description="About Cody Hutchens: ML engineer working on LLM-powered clinical AI, homelab tinkerer, data privacy advocate, and anime fan."
+>
+  <About client:load />
+</BaseLayout>

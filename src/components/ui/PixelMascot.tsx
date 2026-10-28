@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from '@/hooks/usePathname';
 import { createInitialState, tick, selectSprite } from '@/mascot/state-machine';
 import { getPagePlatforms } from '@/mascot/platforms';
 import {
@@ -49,7 +49,7 @@ interface EnergyInstance extends DustParticle {
 
 export default function PixelMascot() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const location = useLocation();
+  const pathname = usePathname();
   const [speech, setSpeech] = useState('');
   const [speechPos, setSpeechPos] = useState({ x: 0, y: 0 });
   const [showPowerFx, setShowPowerFx] = useState(false);
@@ -61,17 +61,14 @@ export default function PixelMascot() {
   // disappear and reset to offscreen on every navigation.
   const stateRef = useRef<MascotState | null>(null);
   const platformsRef = useRef<Platform[]>([]);
-  const routeRef = useRef(location.pathname);
+  const routeRef = useRef(pathname);
 
   // Keep platforms and route in sync with the current route, without resetting
   // the rest of the mascot state.
   useEffect(() => {
-    routeRef.current = location.pathname;
-    platformsRef.current = getPagePlatforms(
-      location.pathname,
-      window.innerHeight,
-    );
-  }, [location.pathname]);
+    routeRef.current = pathname;
+    platformsRef.current = getPagePlatforms(pathname, window.innerHeight);
+  }, [pathname]);
 
   const render = useCallback(
     (ctx: CanvasRenderingContext2D, frame: number[][], flip: boolean) => {

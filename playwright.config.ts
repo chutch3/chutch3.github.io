@@ -8,7 +8,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npx vite preview --port 4173',
+    command: 'npx astro preview --port 4173',
     port: 4173,
     reuseExistingServer: true,
   },

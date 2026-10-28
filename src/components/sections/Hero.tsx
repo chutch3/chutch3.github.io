@@ -66,7 +66,7 @@ export default function Hero() {
           transition={{ delay: 0.9, duration: 0.6 }}
           className="flex flex-wrap items-center justify-center gap-4"
         >
-          <NeonButton to="/about" variant="cyan">
+          <NeonButton to="/about/" variant="cyan">
             Enter
           </NeonButton>
           <NeonButton
