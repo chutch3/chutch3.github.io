@@ -1,0 +1,63 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import SectionHeading from '@/components/ui/SectionHeading';
+import { siteConfig } from '@/config/site.config';
+import { getPosts, formatDate } from '@/lib/posts';
+
+if (!siteConfig.features.blogPage) return Astro.redirect('/');
+
+const posts = await getPosts();
+---
+
+<BaseLayout
+  title="Blog"
+  description="Short posts from Cody Hutchens on homelab decisions, ML engineering, testing in Python, and data privacy."
+>
+  <section class="py-24 px-6 glow-cyan noise-bg">
+    <div class="max-w-3xl mx-auto">
+      <SectionHeading
+        title={siteConfig.sections.blog.title}
+        jpTitle={siteConfig.sections.blog.jp}
+      />
+
+      {
+        posts.length === 0 ? (
+          <div class="font-mono text-sm text-cyber-muted space-y-2 border border-cyber-border rounded-lg p-10 bg-cyber-surface/30">
+            <p>
+              <span class="text-cyber-cyan">$</span> ls ./blog
+            </p>
+            <p class="text-cyber-text">No posts yet. First ones are coming.</p>
+          </div>
+        ) : (
+          <ul class="space-y-6">
+            {posts.map((post) => (
+              <li>
+                <a
+                  href={`/blog/${post.id}/`}
+                  class="block bg-cyber-surface border border-cyber-border rounded-lg p-6 transition-all duration-300 hover:border-cyber-cyan/30 hover:shadow-[0_0_20px_rgba(0,245,255,0.05)]"
+                >
+                  <p class="font-mono text-xs text-cyber-muted">
+                    <time datetime={post.data.date.toISOString()}>
+                      {formatDate(post.data.date)}
+                    </time>
+                    {post.data.draft && (
+                      <span class="ml-2 text-cyber-yellow">[draft]</span>
+                    )}
+                  </p>
+                  <h3 class="font-heading text-lg text-cyber-text mt-2">
+                    {post.data.title}
+                  </h3>
+                  <p class="text-cyber-text/70 mt-2">{post.data.description}</p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      <p class="font-mono text-xs text-cyber-muted mt-10">
+        <a href="/rss.xml" class="text-cyber-cyan hover:neon-cyan">RSS feed</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>

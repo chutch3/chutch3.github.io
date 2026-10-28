@@ -1,0 +1,126 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import ScanlineOverlay from '@/components/layout/ScanlineOverlay';
+import PixelMascot from '@/components/ui/PixelMascot';
+import EasterEggs from '@/components/ui/EasterEggs';
+import { siteConfig } from '@/config/site.config';
+import '@/styles/index.css';
+import '@/styles/effects.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = siteConfig.seo.description,
+  type = 'website',
+} = Astro.props;
+
+const pageTitle = title
+  ? `${title} | ${siteConfig.seo.title}`
+  : siteConfig.seo.title;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+const isHome = Astro.url.pathname === '/';
+
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: siteConfig.name,
+  jobTitle: siteConfig.title,
+  url: siteConfig.seo.url,
+  sameAs: [
+    `https://github.com/${siteConfig.social.github}`,
+    `https://www.linkedin.com/in/${siteConfig.social.linkedin}`,
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script is:inline>
+      // Old hash-router links (/#/about) → real paths (/about/)
+      if (location.hash.startsWith('#/')) {
+        const path = location.hash.slice(1).replace(/\/?$/, '/');
+        location.replace(path);
+      }
+    </script>
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={siteConfig.seo.title}
+      href="/rss.xml"
+    />
+
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {
+      isHome && (
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={JSON.stringify(person)}
+        />
+      )
+    }
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      is:inline
+      data-goatcounter={`https://${siteConfig.goatcounter.siteCode}.goatcounter.com/count`}
+      async
+      src="//gc.zgo.at/count.js"></script>
+    <ClientRouter />
+  </head>
+  <body>
+    <div class="min-h-screen flex flex-col">
+      {siteConfig.features.scanlines && <ScanlineOverlay />}
+      <Navbar client:load currentPath={Astro.url.pathname} />
+      <main class="flex-1 pt-16">
+        <slot />
+      </main>
+      {!isHome && <Footer client:idle />}
+      {
+        siteConfig.features.mascot && (
+          <PixelMascot client:only="react" transition:persist="mascot" />
+        )
+      }
+      {
+        siteConfig.features.easterEggs && (
+          <EasterEggs client:only="react" transition:persist="easter-eggs" />
+        )
+      }
+    </div>
+    <script>
+      import { trackPageView } from '@/lib/analytics';
+
+      // count.js records the first load; count client-side navigations here.
+      document.addEventListener('astro:after-swap', () =>
+        trackPageView(location.pathname),
+      );
+    </script>
+  </body>
+</html>

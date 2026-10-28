@@ -1,5 +1,4 @@
 import { type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 
 interface NeonButtonProps {
   children: ReactNode;
@@ -29,10 +28,10 @@ export default function NeonButton({
 }: NeonButtonProps) {
   const baseClasses = `inline-flex items-center gap-2 px-6 py-3 border font-heading text-sm uppercase tracking-widest transition-all duration-300 ${variantStyles[variant]} ${className}`;
 
-  if (href) {
+  if (href || to) {
     return (
       <a
-        href={href}
+        href={href ?? to}
         className={baseClasses}
         target={external ? '_blank' : undefined}
         rel={external ? 'noreferrer' : undefined}
@@ -40,14 +39,6 @@ export default function NeonButton({
       >
         {children}
       </a>
-    );
-  }
-
-  if (to) {
-    return (
-      <Link to={to} className={baseClasses} onClick={onClick}>
-        {children}
-      </Link>
     );
   }
 

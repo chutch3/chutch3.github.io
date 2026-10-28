@@ -1,0 +1,14 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AnimeWatchlist from '@/components/sections/AnimeWatchlist';
+import { siteConfig } from '@/config/site.config';
+
+if (!siteConfig.features.animePage) return Astro.redirect('/');
+---
+
+<BaseLayout
+  title="Anime Watchlist"
+  description="Cody Hutchens' anime watchlist, from Frieren to Ergo Proxy."
+>
+  <AnimeWatchlist client:load />
+</BaseLayout>

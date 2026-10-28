@@ -1,0 +1,14 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DataPrivacy from '@/components/sections/DataPrivacy';
+import { siteConfig } from '@/config/site.config';
+
+if (!siteConfig.features.privacyPage) return Astro.redirect('/');
+---
+
+<BaseLayout
+  title="Data Privacy"
+  description="Cody Hutchens on data privacy: why it matters more in the age of LLMs, and how to keep control of your own data."
+>
+  <DataPrivacy client:load />
+</BaseLayout>

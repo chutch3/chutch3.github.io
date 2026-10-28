@@ -1,0 +1,11 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Projects from '@/components/sections/Projects';
+---
+
+<BaseLayout
+  title="Projects"
+  description="Projects by Cody Hutchens: homelab automation, LLM agents, self-hosted tools, and open source side projects."
+>
+  <Projects client:load />
+</BaseLayout>

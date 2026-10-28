@@ -18,13 +18,13 @@ async function waitForCharacterOnScreen(
 
 test.describe('PixelMascot', () => {
   test('character appears on screen', async ({ page }) => {
-    await page.goto('/#/');
+    await page.goto('/');
     const box = await waitForCharacterOnScreen(page);
     expect(box).not.toBeNull();
   });
 
   test('character responds to click with speech', async ({ page }) => {
-    await page.goto('/#/');
+    await page.goto('/');
     const canvas = page.locator('canvas');
     const clickPhrases = ['NANI?!', 'oi!', 'やめて!', '(╯°□°)╯', 'hey!!', '!?'];
 
@@ -57,7 +57,7 @@ test.describe('PixelMascot', () => {
   });
 
   test('character appears after route change', async ({ page }) => {
-    await page.goto('/#/about');
+    await page.goto('/about/');
     const box = await waitForCharacterOnScreen(page);
     expect(box).not.toBeNull();
   });

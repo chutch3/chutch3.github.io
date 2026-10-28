@@ -1,0 +1,11 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Resume from '@/components/sections/Resume';
+---
+
+<BaseLayout
+  title="Resume"
+  description="Resume of Cody Hutchens, Senior ML Engineer: experience at SmarterDx, Perennial, Ontra, Drizly, and Humana, plus a Georgia Tech MS in CS (ML)."
+>
+  <Resume client:load />
+</BaseLayout>

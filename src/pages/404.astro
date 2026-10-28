@@ -1,0 +1,19 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404">
+  <section class="py-32 px-6 text-center">
+    <p class="font-heading text-6xl font-bold text-cyber-pink neon-pink">404</p>
+    <p class="font-mono text-sm text-cyber-muted mt-6">
+      <span class="text-cyber-cyan">$</span> cd {Astro.url.pathname}: no such file
+      or directory
+    </p>
+    <a
+      href="/"
+      class="inline-block mt-10 font-heading text-sm uppercase tracking-widest text-cyber-cyan hover:neon-cyan"
+    >
+      Go home
+    </a>
+  </section>
+</BaseLayout>
