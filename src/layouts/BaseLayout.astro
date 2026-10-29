@@ -49,7 +49,9 @@ const person = {
     <script is:inline>
       // Old hash-router links (/#/about) → real paths (/about/)
       if (location.hash.startsWith('#/')) {
-        const path = location.hash.slice(1).replace(/\/?$/, '/');
+        let path = location.hash.slice(1).replace(/\/?$/, '/');
+        // /homelab/ is now the homelab repo's docs site, so the old page lives at /lab/
+        if (path === '/homelab/') path = '/lab/';
         location.replace(path);
       }
     </script>

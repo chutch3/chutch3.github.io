@@ -9,7 +9,7 @@ const navLinks = [
   { path: '/resume/', label: 'Resume' },
   { path: '/projects/', label: 'Projects' },
   ...(siteConfig.features.homelabPage
-    ? [{ path: '/homelab/', label: 'Homelab' }]
+    ? [{ path: '/lab/', label: 'Homelab' }]
     : []),
   ...(siteConfig.features.blogPage ? [{ path: '/blog/', label: 'Blog' }] : []),
   ...(siteConfig.features.animePage

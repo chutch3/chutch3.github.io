@@ -6,6 +6,14 @@ test('old hash-router links redirect to real paths', async ({ page }) => {
   await expect(page).toHaveTitle('About | Cody Hutchens');
 });
 
+test('old homelab hash link goes to /lab/, not the homelab docs', async ({
+  page,
+}) => {
+  await page.goto('/#/homelab');
+  await expect(page).toHaveURL(/\/lab\/$/);
+  await expect(page).toHaveTitle('Homelab | Cody Hutchens');
+});
+
 test('pages are served as prerendered HTML', async ({ request }) => {
   const res = await request.get('/about/');
   expect(res.ok()).toBe(true);

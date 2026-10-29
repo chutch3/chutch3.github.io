@@ -287,6 +287,13 @@ export default function Homelab() {
           jpTitle={siteConfig.sections.homelab.jp}
         />
 
+        <p className="font-mono text-sm text-cyber-muted -mt-8 mb-12">
+          <span className="text-cyber-cyan">$</span> man homelab →{' '}
+          <a href="/homelab/" className="text-cyber-cyan hover:neon-cyan">
+            how it&apos;s built
+          </a>
+        </p>
+
         {state === 'loading' && (
           <div className="text-center py-16">
             <p className="font-mono text-sm text-cyber-muted animate-pulse">
